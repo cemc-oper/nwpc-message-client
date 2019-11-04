@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	fmt.Println("NMIC Message Client")
+	fmt.Println("NWPC Message Client")
 	fmt.Println("This program is under development. Please contact Wang Dapeng(3083) if it fails.")
 	fmt.Println()
 }
