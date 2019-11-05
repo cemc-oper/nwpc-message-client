@@ -3,6 +3,7 @@
 # 1. call ecflow_client
 # 2. call nwpc_message_client to send messages.
 set -x
+set -e
 
 # call ecflow_client
 /g1/app/apps/ecflow/4.11.1/bin/ecflow_client "$@"
@@ -10,4 +11,5 @@ set -x
 # call nwpc_message_client
 nwpc_message_client ecflow-client --command-options="$*"
 
+set +e
 set +x
