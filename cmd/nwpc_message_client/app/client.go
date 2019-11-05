@@ -3,7 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nwpc-oper/nwpc-message-client/command"
+	"github.com/nwpc-oper/nwpc-message-client/common"
 	"github.com/nwpc-oper/nwpc-message-client/sender"
 	"github.com/spf13/cobra"
 	"log"
@@ -18,7 +18,7 @@ var (
 func init() {
 	rootCmd.AddCommand(ecFlowClientCmd)
 
-	ecFlowClientCmd.Flags().StringVar(&commandOptions, "command-options", "", "command options")
+	ecFlowClientCmd.Flags().StringVar(&commandOptions, "common-options", "", "common options")
 	ecFlowClientCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "", "rabbitmq server")
 }
 
@@ -29,7 +29,7 @@ var ecFlowClientCmd = &cobra.Command{
 	Short: "send message for ecflow",
 	Long:  "send message for ecflow",
 	Run: func(cmd *cobra.Command, args []string) {
-		data, err := command.CreateEcflowClientMessage(commandOptions)
+		data, err := common.CreateEcflowClientMessage(commandOptions)
 		if err != nil {
 			log.Fatal(err)
 		}
