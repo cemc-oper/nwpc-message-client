@@ -44,16 +44,13 @@ var ecFlowClientCmd = &cobra.Command{
 		}
 
 		data := EcflowClientData{
-			Command:   command,
-			Arguments: arguments,
-			Envs: []map[string]string{
-				{"ECF_HOST": os.Getenv("ECF_HOST")},
-				{"ECF_PORT": os.Getenv("ECF_PORT")},
-				{"ECF_NAME": os.Getenv("ECF_NAME")},
-				{"ECF_PORT": os.Getenv("ECF_PORT")},
-				{"ECF_RID": os.Getenv("ECF_RID")},
-				{"ECF_TRYNO": os.Getenv("ECF_TRYNO")},
-			},
+			Command:    command,
+			Arguments:  arguments,
+			EcflowHost: os.Getenv("ECF_HOST"),
+			EcflowPort: os.Getenv("ECF_PORT"),
+			NodeName:   os.Getenv("ECF_NAME"),
+			NodeRID:    os.Getenv("ECF_RID"),
+			TryNo:      os.Getenv("ECF_TRYNO"),
 		}
 
 		message := EventMessage{
@@ -76,7 +73,12 @@ type EventMessage struct {
 }
 
 type EcflowClientData struct {
-	Command   string              `json:"command"`
-	Arguments []string            `json:"args"`
-	Envs      []map[string]string `json:"envs"`
+	Command    string              `json:"command"`
+	Arguments  []string            `json:"args"`
+	Envs       []map[string]string `json:"envs"`
+	EcflowHost string              `json:"ecf_host"`
+	EcflowPort string              `json:"ecf_port"`
+	NodeName   string              `json:"ecf_name"`
+	NodeRID    string              `json:"ecf_rid"`
+	TryNo      string              `json:"ecf_tryno"`
 }
