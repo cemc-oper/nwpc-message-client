@@ -20,6 +20,8 @@ func init() {
 	ecFlowClientCmd.Flags().StringVar(&commandOptions, "command-options", "", "command options")
 }
 
+const EcflowClientMessageType = "ecflow-client"
+
 var ecFlowClientCmd = &cobra.Command{
 	Use:   "ecflow-client",
 	Short: "send message for ecflow",
@@ -56,7 +58,7 @@ var ecFlowClientCmd = &cobra.Command{
 
 		message := EventMessage{
 			App:  "nwpc-message-client",
-			Type: "ecflow-client",
+			Type: EcflowClientMessageType,
 			Time: time.Now(),
 			Data: data,
 		}
