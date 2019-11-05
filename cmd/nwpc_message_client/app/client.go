@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/nwpc-oper/nwpc-message-client/sender"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -12,12 +13,14 @@ import (
 
 var (
 	commandOptions = ""
+	rabbitmqServer = ""
 )
 
 func init() {
 	rootCmd.AddCommand(ecFlowClientCmd)
 
 	ecFlowClientCmd.Flags().StringVar(&commandOptions, "command-options", "", "command options")
+	ecFlowClientCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "", "rabbitmq server")
 }
 
 const EcflowClientMessageType = "ecflow-client"
@@ -27,6 +30,7 @@ var ecFlowClientCmd = &cobra.Command{
 	Short: "send message for ecflow",
 	Long:  "send message for ecflow",
 	Run: func(cmd *cobra.Command, args []string) {
+		// create message
 		tokens := strings.Split(commandOptions, " ")
 		commandToken := tokens[0]
 		if commandToken[0:2] != "--" {
@@ -62,6 +66,23 @@ var ecFlowClientCmd = &cobra.Command{
 
 		messageBytes, _ := json.Marshal(message)
 		fmt.Printf("%s\n", messageBytes)
+
+		// send message
+		rabbitmqTarget := sender.RabbitMQTarget{
+			Server:       rabbitmqServer,
+			WriteTimeout: 2 * time.Second,
+		}
+
+		sender := sender.RabbitMQSender{
+			Target: rabbitmqTarget,
+			Debug:  true,
+		}
+
+		err := sender.SendMessage(messageBytes)
+
+		if err != nil {
+			log.Fatalf("send messge has error: %s", err)
+		}
 	},
 }
 
