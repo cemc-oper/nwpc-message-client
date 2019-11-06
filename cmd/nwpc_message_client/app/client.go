@@ -1,11 +1,13 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/common"
-	"github.com/nwpc-oper/nwpc-message-client/sender"
+	pb "github.com/nwpc-oper/nwpc-message-client/messagebroker"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 	"log"
 	"time"
 )
@@ -18,8 +20,9 @@ var (
 func init() {
 	rootCmd.AddCommand(ecFlowClientCmd)
 
-	ecFlowClientCmd.Flags().StringVar(&commandOptions, "common-options", "", "common options")
+	ecFlowClientCmd.Flags().StringVar(&commandOptions, "command-options", "", "command options")
 	ecFlowClientCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "", "rabbitmq server")
+	ecFlowClientCmd.Flags().StringVar(&brokerAddress, "broker-address", "", "broker address")
 }
 
 const EcflowClientMessageType = "ecflow-client"
@@ -45,21 +48,37 @@ var ecFlowClientCmd = &cobra.Command{
 
 		fmt.Printf("%s\n", messageBytes)
 
-		// send message
-		rabbitmqTarget := sender.RabbitMQTarget{
-			Server:       rabbitmqServer,
-			WriteTimeout: 2 * time.Second,
+		var opts []grpc.DialOption
+		opts = append(opts, grpc.WithInsecure())
+		conn, err := grpc.Dial(brokerAddress, opts...)
+		if err != nil {
+			log.Fatalf("connect to broker has error: %v\n", err)
 		}
 
-		sender := sender.RabbitMQSender{
-			Target: rabbitmqTarget,
-			Debug:  true,
-		}
+		defer conn.Close()
 
-		err = sender.SendMessage(messageBytes)
+		client := pb.NewMessageBrokerClient(conn)
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+
+		response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
+			Target: &pb.RabbitMQTarget{
+				Server:   rabbitmqServer,
+				Exchange: "ecflow-client",
+				RouteKey: "",
+			},
+			Message: &pb.Message{
+				Data: messageBytes,
+			},
+		})
 
 		if err != nil {
-			log.Fatalf("send messge has error: %s", err)
+			log.Fatalf("send message has error: %v", err)
+		}
+
+		if response.ErrorNo != 0 {
+			log.Fatalf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
 		}
 	},
 }
