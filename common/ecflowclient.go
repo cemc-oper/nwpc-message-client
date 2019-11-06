@@ -40,11 +40,15 @@ func (d *EcflowClientData) ParseCommandOptions(commandOptions string) {
 	parser.UnknownOptionHandler = func(option string, arg flags.SplitArgument, args []string) (i []string, e error) {
 		value, _ := arg.Value()
 		d.Command = option
-		d.Arguments = append(d.Arguments, value)
+		if len(value) > 0 {
+			d.Arguments = append(d.Arguments, value)
+		}
 		return args, nil
 	}
 
-	remainArgs, err := parser.ParseArgs(strings.Split(commandOptions, " "))
+	tokens := strings.Fields(commandOptions)
+
+	remainArgs, err := parser.ParseArgs(tokens)
 	if err != nil {
 		panic(err)
 	}
