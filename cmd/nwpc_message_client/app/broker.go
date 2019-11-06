@@ -9,14 +9,9 @@ import (
 	"net"
 )
 
-var (
-	brokerAddress = ""
-)
-
 func init() {
 	rootCmd.AddCommand(brokerCmd)
 
-	brokerCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "", "rabbitmq server")
 	brokerCmd.Flags().StringVar(&brokerAddress, "address", ":33383", "broker rpc address")
 }
 

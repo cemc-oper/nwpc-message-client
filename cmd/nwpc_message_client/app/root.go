@@ -13,11 +13,11 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "nmic_message_clinet",
-	Short: "A client for NMIC message.",
-	Long:  "A client for NMIC message.",
+	Use:   "nwpc_message_clinet",
+	Short: "A client for NWPC message.",
+	Long:  "A client for NWPC message.",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		cmd.Help()
 	},
 }
 

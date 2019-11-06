@@ -12,10 +12,7 @@ import (
 	"time"
 )
 
-var (
-	commandOptions = ""
-	rabbitmqServer = ""
-)
+var ()
 
 func init() {
 	rootCmd.AddCommand(ecFlowClientCmd)
@@ -23,6 +20,10 @@ func init() {
 	ecFlowClientCmd.Flags().StringVar(&commandOptions, "command-options", "", "command options")
 	ecFlowClientCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "", "rabbitmq server")
 	ecFlowClientCmd.Flags().StringVar(&brokerAddress, "broker-address", "", "broker address")
+
+	rootCmd.MarkFlagRequired("command-options")
+	rootCmd.MarkFlagRequired("rabbitmq-server")
+	rootCmd.MarkFlagRequired("broker-address")
 }
 
 const EcflowClientMessageType = "ecflow-client"
