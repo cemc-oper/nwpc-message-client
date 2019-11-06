@@ -14,7 +14,7 @@ type MessageBrokerServer struct {
 }
 
 func (s *MessageBrokerServer) SendRabbitMQMessage(ctx context.Context, req *pb.RabbitMQMessage) (*pb.Response, error) {
-	log.Printf("receiving message...\n")
+	log.Printf("receiving message...%s\n", req.GetMessage().GetData())
 	rabbitmqTarget := sender.RabbitMQTarget{
 		Server:       req.GetTarget().GetServer(),
 		WriteTimeout: 2 * time.Second,
