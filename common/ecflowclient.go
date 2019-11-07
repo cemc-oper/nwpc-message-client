@@ -20,7 +20,7 @@ func CreateEcflowClientMessage(commandOptions string) (*EcflowClientData, error)
 }
 
 type EcflowClientData struct {
-	Command    string              `json:"common"`
+	Command    string              `json:"command"`
 	Arguments  []string            `json:"args"`
 	Envs       []map[string]string `json:"envs"`
 	EcflowHost string              `json:"ecf_host"`
