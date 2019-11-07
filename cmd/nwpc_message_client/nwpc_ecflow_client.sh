@@ -9,7 +9,7 @@ set -e
 /g1/app/apps/ecflow/4.11.1/bin/ecflow_client "$@"
 
 # call nwpc_message_client
-nwpc_message_client ecflow-client --common-options="$*"
+nwpc_message_client ecflow-client --common-options="$*" --broker-address="login_b01:33384"
 
 set +e
 set +x
