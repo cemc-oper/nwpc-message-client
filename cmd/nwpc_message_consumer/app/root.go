@@ -6,18 +6,12 @@ import (
 	"os"
 )
 
-func init() {
-	fmt.Println("NWPC Message Consumer")
-	fmt.Println("This program is under development. Please contact Wang Dapeng(3083) if it fails.")
-	fmt.Println()
-}
-
 var rootCmd = &cobra.Command{
 	Use:   "nwpc_message_consumer",
 	Short: "A consumer for NWPC message.",
 	Long:  "A consumer for NWPC message.",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		cmd.Help()
 	},
 }
 

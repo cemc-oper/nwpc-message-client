@@ -3,8 +3,8 @@ package common
 import (
 	"context"
 	"fmt"
-	pb "github.com/nwpc-oper/nwpc-message-client/messagebroker"
-	"github.com/nwpc-oper/nwpc-message-client/sender"
+	pb "github.com/nwpc-oper/nwpc-message-client/common/messagebroker"
+	"github.com/nwpc-oper/nwpc-message-client/common/sender"
 	log "github.com/sirupsen/logrus"
 	"time"
 )

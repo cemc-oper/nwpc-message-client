@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/nwpc-oper/nwpc-message-client/consumer"
+	"github.com/nwpc-oper/nwpc-message-client/common/consumer"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +17,10 @@ var ecflowClientCmd = &cobra.Command{
 	Short: "consume message from ecflow",
 	Long:  "consume message from ecflow",
 	Run: func(cmd *cobra.Command, args []string) {
+		log.WithFields(log.Fields{
+			"component": "ecflow-client",
+			"event":     "consumer",
+		}).Info("start to consume...")
 		target := consumer.RabbitMQTarget{
 			Server: rabbitmqServer,
 		}
@@ -27,9 +31,11 @@ var ecflowClientCmd = &cobra.Command{
 		}
 
 		err := consumer.ConsumeMessages()
-		log.WithFields(log.Fields{
-			"component": "ecflow-client",
-			"event":     "message",
-		}).Infof("%s", err)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"component": "ecflow-client",
+				"event":     "consumer",
+			}).Fatalf("%v", err)
+		}
 	},
 }

@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/nwpc-oper/nwpc-message-client/common"
-	pb "github.com/nwpc-oper/nwpc-message-client/messagebroker"
+	pb "github.com/nwpc-oper/nwpc-message-client/common/messagebroker"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
