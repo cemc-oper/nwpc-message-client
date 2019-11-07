@@ -3,9 +3,9 @@ package app
 import (
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	pb "github.com/nwpc-oper/nwpc-message-client/messagebroker"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"log"
 	"net"
 )
 
@@ -25,10 +25,16 @@ var brokerCmd = &cobra.Command{
 	Short: "broker for nwpc_message_client",
 	Long:  brokerDescription,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Printf("listening on %s", brokerAddress)
+		log.WithFields(log.Fields{
+			"component": "broker",
+			"event":     "server",
+		}).Infof("listening on %s", brokerAddress)
 		lis, err := net.Listen("tcp", brokerAddress)
 		if err != nil {
-			log.Fatalf("failed to listem: %v", err)
+			log.WithFields(log.Fields{
+				"component": "broker",
+				"event":     "server",
+			}).Fatalf("failed to listen: %v", err)
 		}
 
 		grpcServer := grpc.NewServer()

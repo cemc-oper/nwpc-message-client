@@ -1,8 +1,8 @@
 package app
 
 import (
-	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/consumer"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -27,6 +27,9 @@ var ecflowClientCmd = &cobra.Command{
 		}
 
 		err := consumer.ConsumeMessages()
-		fmt.Printf("%s\n", err)
+		log.WithFields(log.Fields{
+			"component": "ecflow-client",
+			"event":     "message",
+		}).Infof("%s", err)
 	},
 }

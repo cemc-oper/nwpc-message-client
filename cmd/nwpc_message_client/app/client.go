@@ -3,12 +3,11 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	pb "github.com/nwpc-oper/nwpc-message-client/messagebroker"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"log"
 	"time"
 )
 
@@ -32,7 +31,7 @@ Messages are send to a rabbitmq server via a broker running by ecflow_client bro
 
 var ecFlowClientCmd = &cobra.Command{
 	Use:   "ecflow-client",
-	Short: "send message for ecflow",
+	Short: "send ecflow_client message to broker",
 	Long:  ecflowClientDescription,
 	Run: func(cmd *cobra.Command, args []string) {
 		data, err := common.CreateEcflowClientMessage(commandOptions)
@@ -49,13 +48,19 @@ var ecFlowClientCmd = &cobra.Command{
 
 		messageBytes, _ := json.Marshal(message)
 
-		fmt.Printf("%s\n", messageBytes)
+		log.WithFields(log.Fields{
+			"component": "ecflow-client",
+			"event":     "message",
+		}).Infof("%s", messageBytes)
 
 		var opts []grpc.DialOption
 		opts = append(opts, grpc.WithInsecure())
 		conn, err := grpc.Dial(brokerAddress, opts...)
 		if err != nil {
-			log.Fatalf("connect to broker has error: %v\n", err)
+			log.WithFields(log.Fields{
+				"component": "ecflow-client",
+				"event":     "connection",
+			}).Fatalf("connect to broker has error: %v\n", err)
 		}
 
 		defer conn.Close()
@@ -77,11 +82,17 @@ var ecFlowClientCmd = &cobra.Command{
 		})
 
 		if err != nil {
-			log.Fatalf("send message has error: %v", err)
+			log.WithFields(log.Fields{
+				"component": "ecflow-client",
+				"event":     "send",
+			}).Fatalf("send message has error: %v", err)
 		}
 
 		if response.ErrorNo != 0 {
-			log.Fatalf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
+			log.WithFields(log.Fields{
+				"component": "ecflow-client",
+				"event":     "response",
+			}).Fatalf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
 		}
 	},
 }

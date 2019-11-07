@@ -2,8 +2,8 @@ package consumer
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
-	"log"
 	"time"
 )
 
@@ -84,7 +84,10 @@ func (s *RabbitMQConsumer) ConsumeMessages() error {
 
 	go func() {
 		for d := range messages {
-			log.Printf("[x] %s\n", d.Body)
+			log.WithFields(log.Fields{
+				"component": "rabbitmq",
+				"event":     "message",
+			}).Infof("%s\n", d.Body)
 		}
 	}()
 

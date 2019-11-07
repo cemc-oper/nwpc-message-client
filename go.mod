@@ -5,7 +5,9 @@ go 1.13
 require (
 	github.com/golang/protobuf v1.3.2
 	github.com/jessevdk/go-flags v1.4.0
+	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/segmentio/kafka-go v0.3.4
+	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271

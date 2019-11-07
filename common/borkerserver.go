@@ -5,7 +5,7 @@ import (
 	"fmt"
 	pb "github.com/nwpc-oper/nwpc-message-client/messagebroker"
 	"github.com/nwpc-oper/nwpc-message-client/sender"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -14,7 +14,10 @@ type MessageBrokerServer struct {
 }
 
 func (s *MessageBrokerServer) SendRabbitMQMessage(ctx context.Context, req *pb.RabbitMQMessage) (*pb.Response, error) {
-	log.Printf("receiving message...%s\n", req.GetMessage().GetData())
+	log.WithFields(log.Fields{
+		"component": "broker",
+		"event":     "rabbitmq-message",
+	}).Infof("receiving message...%s\n", req.GetMessage().GetData())
 	rabbitmqTarget := sender.RabbitMQTarget{
 		Server:       req.GetTarget().GetServer(),
 		WriteTimeout: 2 * time.Second,
