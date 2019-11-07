@@ -6,11 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	commandOptions = ""
-	rabbitmqServer = ""
-)
-
 func init() {
 	rootCmd.AddCommand(ecflowClientCmd)
 

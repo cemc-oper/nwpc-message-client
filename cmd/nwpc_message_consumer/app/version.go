@@ -5,12 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	Version   = "Unknown version"
-	BuildTime = "Unknown build time"
-	GitCommit = "Unknown GitCommit"
-)
-
 func init() {
 	rootCmd.AddCommand(versionCmd)
 }

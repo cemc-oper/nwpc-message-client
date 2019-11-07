@@ -1,8 +1,6 @@
 package app
 
 var (
-	brokerAddress  = ""
-	commandOptions = ""
 	rabbitmqServer = ""
 
 	Version   = "Unknown version"

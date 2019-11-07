@@ -12,8 +12,6 @@ import (
 	"time"
 )
 
-var ()
-
 func init() {
 	rootCmd.AddCommand(ecFlowClientCmd)
 
@@ -60,7 +58,7 @@ var ecFlowClientCmd = &cobra.Command{
 
 		client := pb.NewMessageBrokerClient(conn)
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 		defer cancel()
 
 		response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
