@@ -25,11 +25,15 @@ func init() {
 }
 
 const EcflowClientMessageType = "ecflow-client"
+const ecflowClientDescription = `
+Send messages for ecflow_client command.
+Messages are send to a rabbitmq server via a broker running by ecflow_client broker command.
+`
 
 var ecFlowClientCmd = &cobra.Command{
 	Use:   "ecflow-client",
 	Short: "send message for ecflow",
-	Long:  "send message for ecflow",
+	Long:  ecflowClientDescription,
 	Run: func(cmd *cobra.Command, args []string) {
 		data, err := common.CreateEcflowClientMessage(commandOptions)
 		if err != nil {
