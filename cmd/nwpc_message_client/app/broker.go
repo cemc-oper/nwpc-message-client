@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	pb "github.com/nwpc-oper/nwpc-message-client/common/messagebroker"
 	log "github.com/sirupsen/logrus"
@@ -24,7 +25,7 @@ var brokerCmd = &cobra.Command{
 	Use:   "broker",
 	Short: "broker for nwpc_message_client",
 	Long:  brokerDescription,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		log.WithFields(log.Fields{
 			"component": "broker",
 			"event":     "server",
@@ -34,7 +35,8 @@ var brokerCmd = &cobra.Command{
 			log.WithFields(log.Fields{
 				"component": "broker",
 				"event":     "server",
-			}).Fatalf("failed to listen: %v", err)
+			}).Errorf("failed to listen: %v", err)
+			return fmt.Errorf("failed to listen: %v", err)
 		}
 
 		grpcServer := grpc.NewServer()
@@ -43,5 +45,6 @@ var brokerCmd = &cobra.Command{
 
 		pb.RegisterMessageBrokerServer(grpcServer, server)
 		grpcServer.Serve(lis)
+		return nil
 	},
 }

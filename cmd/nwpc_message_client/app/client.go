@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	pb "github.com/nwpc-oper/nwpc-message-client/common/messagebroker"
 	log "github.com/sirupsen/logrus"
@@ -33,7 +34,7 @@ var ecFlowClientCmd = &cobra.Command{
 	Use:   "ecflow-client",
 	Short: "send ecflow_client message to broker",
 	Long:  ecflowClientDescription,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		data, err := common.CreateEcflowClientMessage(commandOptions)
 		if err != nil {
 			log.Fatal(err)
@@ -60,7 +61,8 @@ var ecFlowClientCmd = &cobra.Command{
 			log.WithFields(log.Fields{
 				"component": "ecflow-client",
 				"event":     "connection",
-			}).Fatalf("connect to broker has error: %v\n", err)
+			}).Errorf("connect to broker has error: %v\n", err)
+			return fmt.Errorf("connect to broker has error: %v\n", err)
 		}
 
 		defer conn.Close()
@@ -85,15 +87,19 @@ var ecFlowClientCmd = &cobra.Command{
 			log.WithFields(log.Fields{
 				"component": "ecflow-client",
 				"event":     "send",
-			}).Fatalf("send message has error: %v", err)
+			}).Errorf("send message has error: %v", err)
+			return fmt.Errorf("send message has error: %v", err)
 		}
 
 		if response.ErrorNo != 0 {
 			log.WithFields(log.Fields{
 				"component": "ecflow-client",
 				"event":     "response",
-			}).Fatalf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
+			}).Errorf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
+			return fmt.Errorf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
 		}
+
+		return nil
 	},
 }
 

@@ -87,7 +87,7 @@ func (s *RabbitMQConsumer) ConsumeMessages() error {
 			log.WithFields(log.Fields{
 				"component": "rabbitmq",
 				"event":     "message",
-			}).Infof("%s\n", d.Body)
+			}).Infof("%s", d.Body)
 		}
 	}()
 

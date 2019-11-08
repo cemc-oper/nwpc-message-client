@@ -16,7 +16,7 @@ var ecflowClientCmd = &cobra.Command{
 	Use:   "ecflow-client",
 	Short: "consume message from ecflow",
 	Long:  "consume message from ecflow",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		log.WithFields(log.Fields{
 			"component": "ecflow-client",
 			"event":     "consumer",
@@ -35,7 +35,8 @@ var ecflowClientCmd = &cobra.Command{
 			log.WithFields(log.Fields{
 				"component": "ecflow-client",
 				"event":     "consumer",
-			}).Fatalf("%v", err)
+			}).Errorf("%v", err)
 		}
+		return err
 	},
 }
