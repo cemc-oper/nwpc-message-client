@@ -2,6 +2,7 @@ package app
 
 var (
 	brokerAddress  = ""
+	disableDeliver = false
 	commandOptions = ""
 	rabbitmqServer = ""
 

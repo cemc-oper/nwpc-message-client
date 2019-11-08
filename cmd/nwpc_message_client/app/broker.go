@@ -14,6 +14,7 @@ func init() {
 	rootCmd.AddCommand(brokerCmd)
 
 	brokerCmd.Flags().StringVar(&brokerAddress, "address", ":33383", "broker rpc address")
+	brokerCmd.Flags().BoolVar(&disableDeliver, "disable-deliver", false, "disable deliver messages to message queue.")
 }
 
 const brokerDescription = `
@@ -41,7 +42,9 @@ var brokerCmd = &cobra.Command{
 
 		grpcServer := grpc.NewServer()
 
-		server := &common.MessageBrokerServer{}
+		server := &common.MessageBrokerServer{
+			DisableDeliver: disableDeliver,
+		}
 
 		pb.RegisterMessageBrokerServer(grpcServer, server)
 		grpcServer.Serve(lis)

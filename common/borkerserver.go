@@ -11,6 +11,7 @@ import (
 
 type MessageBrokerServer struct {
 	pb.UnimplementedMessageBrokerServer
+	DisableDeliver bool
 }
 
 func (s *MessageBrokerServer) SendRabbitMQMessage(ctx context.Context, req *pb.RabbitMQMessage) (*pb.Response, error) {
@@ -31,10 +32,12 @@ func (s *MessageBrokerServer) SendRabbitMQMessage(ctx context.Context, req *pb.R
 	response := &pb.Response{}
 	response.ErrorNo = 0
 
-	err := rabbitSender.SendMessage(req.GetMessage().GetData())
+	if !s.DisableDeliver {
+		err := rabbitSender.SendMessage(req.GetMessage().GetData())
 
-	if err != nil {
-		response.ErrorMessage = fmt.Sprintf("send messge has error: %s", err)
+		if err != nil {
+			response.ErrorMessage = fmt.Sprintf("send messge has error: %s", err)
+		}
 	}
 
 	return response, nil
