@@ -1,27 +1,34 @@
 package consumer
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/common"
+	"github.com/olivere/elastic/v7"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"time"
 )
 
-type RabbitMQTarget struct {
+type RabbitMQSource struct {
 	Server       string
 	Topic        string
 	WriteTimeout time.Duration
 }
 
+type ElasticSearchTarget struct {
+	Server string
+}
+
 type RabbitMQConsumer struct {
-	Target RabbitMQTarget
+	Source RabbitMQSource
 	Debug  bool
+	Target ElasticSearchTarget
 }
 
 func (s *RabbitMQConsumer) ConsumeMessages() error {
-	connection, err := amqp.Dial(s.Target.Server)
+	connection, err := amqp.Dial(s.Source.Server)
 	if err != nil {
 		return fmt.Errorf("dial to rabbitmq has error: %s", err)
 	}
@@ -95,10 +102,41 @@ func (s *RabbitMQConsumer) ConsumeMessages() error {
 				}).Errorf("can't create EventMessage: %s", d.Body)
 				continue
 			}
+
+			messageTime := event.Time
+			indexName := messageTime.Format("2006-01-02")
+
 			log.WithFields(log.Fields{
-				"component": "rabbitmq",
-				"event":     "message",
-			}).Infof("EventMessage: %s", event)
+				"component": "elastic",
+				"event":     "connect",
+			}).Infof("connecting... %s", s.Target.Server)
+
+			ctx := context.Background()
+			client, err := elastic.NewClient(
+				elastic.SetURL(s.Target.Server))
+			if err != nil {
+				log.WithFields(log.Fields{
+					"component": "elastic",
+					"event":     "connect",
+				}).Errorf("connect has error: %v", err)
+				panic(err)
+			}
+
+			messagePut, err := client.Index().
+				Index(indexName).
+				BodyJson(event).
+				Do(ctx)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"component": "elastic",
+					"event":     "index",
+				}).Errorf("index has error: %v", err)
+			}
+
+			log.WithFields(log.Fields{
+				"component": "elastic",
+				"event":     "index",
+			}).Infof("index finished: %s %s", messagePut.Id, d.Body)
 		}
 	}()
 

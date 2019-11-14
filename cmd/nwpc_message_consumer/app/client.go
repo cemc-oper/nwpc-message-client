@@ -10,6 +10,10 @@ func init() {
 	rootCmd.AddCommand(ecflowClientCmd)
 
 	ecflowClientCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "", "rabbitmq server")
+	ecflowClientCmd.Flags().StringVar(&elasticServer, "elastic-server", "", "elastic server")
+
+	rootCmd.MarkFlagRequired("rabbitmq-server")
+	rootCmd.MarkFlagRequired("elastic-server")
 }
 
 var ecflowClientCmd = &cobra.Command{
@@ -21,13 +25,19 @@ var ecflowClientCmd = &cobra.Command{
 			"component": "ecflow-client",
 			"event":     "consumer",
 		}).Info("start to consume...")
-		target := consumer.RabbitMQTarget{
+
+		source := consumer.RabbitMQSource{
 			Server: rabbitmqServer,
 		}
 
+		target := consumer.ElasticSearchTarget{
+			Server: elasticServer,
+		}
+
 		consumer := &consumer.RabbitMQConsumer{
-			Target: target,
+			Source: source,
 			Debug:  true,
+			Target: target,
 		}
 
 		err := consumer.ConsumeMessages()
