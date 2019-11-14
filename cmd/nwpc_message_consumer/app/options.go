@@ -4,7 +4,7 @@ var (
 	rabbitmqServer = ""
 	elasticServer  = ""
 
-	Version   = "Unknown version"
-	BuildTime = "Unknown build time"
+	Version   = "Unknown Version"
+	BuildTime = "Unknown BuildTime"
 	GitCommit = "Unknown GitCommit"
 )

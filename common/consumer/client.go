@@ -21,13 +21,13 @@ type ElasticSearchTarget struct {
 	Server string
 }
 
-type RabbitMQConsumer struct {
+type EcflowClientConsumer struct {
 	Source RabbitMQSource
-	Debug  bool
 	Target ElasticSearchTarget
+	Debug  bool
 }
 
-func (s *RabbitMQConsumer) ConsumeMessages() error {
+func (s *EcflowClientConsumer) ConsumeMessages() error {
 	connection, err := amqp.Dial(s.Source.Server)
 	if err != nil {
 		return fmt.Errorf("dial to rabbitmq has error: %s", err)
@@ -61,7 +61,6 @@ func (s *RabbitMQConsumer) ConsumeMessages() error {
 		false,
 		nil,
 	)
-
 	if err != nil {
 		return fmt.Errorf("create queue has error: %s", err)
 	}
@@ -93,11 +92,16 @@ func (s *RabbitMQConsumer) ConsumeMessages() error {
 
 	go func() {
 		for d := range messages {
+			log.WithFields(log.Fields{
+				"component": "consumer",
+				"event":     "message",
+			}).Debugf("receive message")
+
 			var event common.EventMessage
 			err := json.Unmarshal(d.Body, &event)
 			if err != nil {
 				log.WithFields(log.Fields{
-					"component": "rabbitmq",
+					"component": "consumer",
 					"event":     "message",
 				}).Errorf("can't create EventMessage: %s", d.Body)
 				continue
@@ -105,11 +109,6 @@ func (s *RabbitMQConsumer) ConsumeMessages() error {
 
 			messageTime := event.Time
 			indexName := messageTime.Format("2006-01-02")
-
-			log.WithFields(log.Fields{
-				"component": "elastic",
-				"event":     "connect",
-			}).Infof("connecting... %s", s.Target.Server)
 
 			ctx := context.Background()
 			client, err := elastic.NewClient(
