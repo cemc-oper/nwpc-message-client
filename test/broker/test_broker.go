@@ -57,7 +57,7 @@ func Execute() {
 
 func SendMessage() {
 	data, err := common.CreateEcflowClientMessage("--init=31134")
-	message := app.EventMessage{
+	message := common.EventMessage{
 		App:  "nwpc-message-client",
 		Type: app.EcflowClientMessageType,
 		Time: time.Now(),
