@@ -1,7 +1,9 @@
 package consumer
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/nwpc-oper/nwpc-message-client/common"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"time"
@@ -84,10 +86,19 @@ func (s *RabbitMQConsumer) ConsumeMessages() error {
 
 	go func() {
 		for d := range messages {
+			var event common.EventMessage
+			err := json.Unmarshal(d.Body, &event)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"component": "rabbitmq",
+					"event":     "message",
+				}).Errorf("can't create EventMessage: %s", d.Body)
+				continue
+			}
 			log.WithFields(log.Fields{
 				"component": "rabbitmq",
 				"event":     "message",
-			}).Infof("%s", d.Body)
+			}).Infof("EventMessage: %s", event)
 		}
 	}()
 

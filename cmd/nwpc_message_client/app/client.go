@@ -40,7 +40,7 @@ var ecFlowClientCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		message := EventMessage{
+		message := common.EventMessage{
 			App:  "nwpc-message-client",
 			Type: EcflowClientMessageType,
 			Time: time.Now(),
@@ -98,14 +98,6 @@ var ecFlowClientCmd = &cobra.Command{
 			}).Errorf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
 			return fmt.Errorf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
 		}
-
 		return nil
 	},
-}
-
-type EventMessage struct {
-	App  string      `json:"app"`
-	Type string      `json:"type"`
-	Time time.Time   `json:"time"`
-	Data interface{} `json:"data"`
 }
