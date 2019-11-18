@@ -111,8 +111,13 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 			indexName := messageTime.Format("2006-01-02")
 
 			ctx := context.Background()
+			// can't connect to es in docker without the last two options.
+			// see https://github.com/olivere/elastic/issues/824
 			client, err := elastic.NewClient(
-				elastic.SetURL(s.Target.Server))
+				elastic.SetURL(s.Target.Server),
+				elastic.SetHealthcheck(false),
+				elastic.SetSniff(false),
+			)
 			if err != nil {
 				log.WithFields(log.Fields{
 					"component": "elastic",
