@@ -13,7 +13,8 @@ import (
 
 type RabbitMQSource struct {
 	Server       string
-	Topic        string
+	Exchange     string
+	Topics       []string
 	WriteTimeout time.Duration
 }
 
@@ -26,6 +27,8 @@ type EcflowClientConsumer struct {
 	Target ElasticSearchTarget
 	Debug  bool
 }
+
+const queueName = "ecflow-client-queue"
 
 func (s *EcflowClientConsumer) ConsumeMessages() error {
 	// create connection to rabbitmq
@@ -49,8 +52,8 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 		"event":     "connect",
 	}).Info("create exchange... ecflow-client")
 	err = channel.ExchangeDeclare(
-		"ecflow-client",
-		"fanout",
+		s.Source.Exchange,
+		"topic",
 		true,
 		false,
 		false,
@@ -66,10 +69,10 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 		"event":     "connect",
 	}).Info("create queue... ecflow-client-queue")
 	queue, err := channel.QueueDeclare(
-		"ecflow-client-queue",
+		queueName,
 		false,
 		false,
-		true,
+		false,
 		false,
 		nil,
 	)
@@ -80,16 +83,23 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 	log.WithFields(log.Fields{
 		"component": "rabbitmq",
 		"event":     "connect",
-	}).Info("bind queue...")
-	err = channel.QueueBind(
-		queue.Name,
-		"",
-		"ecflow-client",
-		false,
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("bind queue has error: %s", err)
+	}).Info("bind queues...")
+	for _, topic := range s.Source.Topics {
+		err = channel.QueueBind(
+			queue.Name,
+			topic,
+			s.Source.Exchange,
+			false,
+			nil,
+		)
+		if err != nil {
+			return fmt.Errorf("bind queue has error: %s", err)
+		} else {
+			log.WithFields(log.Fields{
+				"component": "rabbitmq",
+				"event":     "connect",
+			}).Infof("bind queue...%s", topic)
+		}
 	}
 
 	// consume messages from rabbitmq

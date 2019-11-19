@@ -85,8 +85,8 @@ func sendMessageWithBroker(messageBytes []byte) error {
 	response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
 		Target: &pb.RabbitMQTarget{
 			Server:   rabbitmqServer,
-			Exchange: "ecflow-client",
-			RouteKey: "",
+			Exchange: "nwpc-message",
+			RouteKey: "command.ecflow.ecflow_client",
 		},
 		Message: &pb.Message{
 			Data: messageBytes,
@@ -114,6 +114,8 @@ func sendMessageWithBroker(messageBytes []byte) error {
 func sendMessage(messageBytes []byte) error {
 	rabbitmqTarget := sender.RabbitMQTarget{
 		Server:       rabbitmqServer,
+		Exchange:     "nwpc-message",
+		RouteKey:     "command.ecflow_client",
 		WriteTimeout: 2 * time.Second,
 	}
 

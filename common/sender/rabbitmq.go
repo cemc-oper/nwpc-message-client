@@ -8,7 +8,8 @@ import (
 
 type RabbitMQTarget struct {
 	Server       string
-	Topic        string
+	Exchange     string
+	RouteKey     string
 	WriteTimeout time.Duration
 }
 
@@ -31,8 +32,8 @@ func (s *RabbitMQSender) SendMessage(message []byte) error {
 	defer channel.Close()
 
 	err = channel.ExchangeDeclare(
-		"ecflow-client",
-		"fanout",
+		s.Target.Exchange,
+		"topic",
 		true,
 		false,
 		false,
@@ -44,8 +45,8 @@ func (s *RabbitMQSender) SendMessage(message []byte) error {
 	}
 
 	err = channel.Publish(
-		"ecflow-client",
-		"",
+		s.Target.Exchange,
+		s.Target.RouteKey,
 		false,
 		false,
 		amqp.Publishing{

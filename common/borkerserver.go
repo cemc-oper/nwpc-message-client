@@ -21,6 +21,8 @@ func (s *MessageBrokerServer) SendRabbitMQMessage(ctx context.Context, req *pb.R
 	}).Infof("receiving message...%s\n", req.GetMessage().GetData())
 	rabbitmqTarget := sender.RabbitMQTarget{
 		Server:       req.GetTarget().GetServer(),
+		Exchange:     req.GetTarget().GetExchange(),
+		RouteKey:     req.GetTarget().GetRouteKey(),
 		WriteTimeout: 2 * time.Second,
 	}
 
