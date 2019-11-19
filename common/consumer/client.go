@@ -28,18 +28,26 @@ type EcflowClientConsumer struct {
 }
 
 func (s *EcflowClientConsumer) ConsumeMessages() error {
+	// create connection to rabbitmq
+	log.WithFields(log.Fields{
+		"component": "rabbitmq",
+		"event":     "connect",
+	}).Infof("connecting to rabbitmq...%s", s.Source.Server)
 	connection, err := amqp.Dial(s.Source.Server)
 	if err != nil {
 		return fmt.Errorf("dial to rabbitmq has error: %s", err)
 	}
 	defer connection.Close()
-
 	channel, err := connection.Channel()
 	if err != nil {
 		return fmt.Errorf("create channel has error: %s", err)
 	}
 	defer channel.Close()
 
+	log.WithFields(log.Fields{
+		"component": "rabbitmq",
+		"event":     "connect",
+	}).Info("create exchange... ecflow-client")
 	err = channel.ExchangeDeclare(
 		"ecflow-client",
 		"fanout",
@@ -53,6 +61,10 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 		return fmt.Errorf("create exchange has error: %s", err)
 	}
 
+	log.WithFields(log.Fields{
+		"component": "rabbitmq",
+		"event":     "connect",
+	}).Info("create queue... ecflow-client-queue")
 	queue, err := channel.QueueDeclare(
 		"ecflow-client-queue",
 		false,
@@ -65,6 +77,10 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 		return fmt.Errorf("create queue has error: %s", err)
 	}
 
+	log.WithFields(log.Fields{
+		"component": "rabbitmq",
+		"event":     "connect",
+	}).Info("bind queue...")
 	err = channel.QueueBind(
 		queue.Name,
 		"",
@@ -76,6 +92,11 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 		return fmt.Errorf("bind queue has error: %s", err)
 	}
 
+	// consume messages from rabbitmq
+	log.WithFields(log.Fields{
+		"component": "rabbitmq",
+		"event":     "consume",
+	}).Info("start to consume...")
 	messages, err := channel.Consume(
 		queue.Name,
 		"",
@@ -90,8 +111,10 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 		return fmt.Errorf("failed to register a consumer: %s", err)
 	}
 
+	// load message from channel and handle
 	go func() {
 		for d := range messages {
+			// parse message to generate message index
 			log.WithFields(log.Fields{
 				"component": "consumer",
 				"event":     "message",
@@ -110,6 +133,7 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 			messageTime := event.Time
 			indexName := messageTime.Format("2006-01-02")
 
+			// send to elasticsearch
 			ctx := context.Background()
 			// can't connect to es in docker without the last two options.
 			// see https://github.com/olivere/elastic/issues/824
