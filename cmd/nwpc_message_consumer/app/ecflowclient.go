@@ -11,10 +11,13 @@ func init() {
 
 	ecflowClientCmd.Flags().StringVar(&rabbitmqServer,
 		"rabbitmq-server", "", "rabbitmq server")
+	ecflowClientCmd.Flags().StringVar(&rabbitmqQueueName,
+		"rabbitmq-queue-name", "ecflow-client-queue", "rabbitmq queue name")
 	ecflowClientCmd.Flags().StringVar(&elasticServer,
 		"elasticsearch-server", "", "elasticsearch server")
 
 	rootCmd.MarkFlagRequired("rabbitmq-server")
+	rootCmd.MarkFlagRequired("rabbitmq-queue-name")
 	rootCmd.MarkFlagRequired("elastic-server")
 }
 
@@ -33,6 +36,7 @@ var ecflowClientCmd = &cobra.Command{
 				Server:   rabbitmqServer,
 				Exchange: "nwpc-message",
 				Topics:   []string{"command.ecflow.ecflow_client"},
+				Queue:    rabbitmqQueueName,
 			},
 			Target: consumer.ElasticSearchTarget{
 				Server: elasticServer,

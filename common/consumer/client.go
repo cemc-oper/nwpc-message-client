@@ -15,6 +15,7 @@ type RabbitMQSource struct {
 	Server       string
 	Exchange     string
 	Topics       []string
+	Queue        string
 	WriteTimeout time.Duration
 }
 
@@ -27,8 +28,6 @@ type EcflowClientConsumer struct {
 	Target ElasticSearchTarget
 	Debug  bool
 }
-
-const queueName = "ecflow-client-queue"
 
 func (s *EcflowClientConsumer) ConsumeMessages() error {
 	// create connection to rabbitmq
@@ -69,7 +68,7 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 		"event":     "connect",
 	}).Info("create queue... ecflow-client-queue")
 	queue, err := channel.QueueDeclare(
-		queueName,
+		s.Source.Queue,
 		false,
 		false,
 		false,

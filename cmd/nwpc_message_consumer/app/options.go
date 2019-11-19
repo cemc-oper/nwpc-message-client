@@ -1,8 +1,9 @@
 package app
 
 var (
-	rabbitmqServer = ""
-	elasticServer  = ""
+	rabbitmqServer    = ""
+	rabbitmqQueueName = ""
+	elasticServer     = ""
 
 	Version   = "Unknown Version"
 	BuildTime = "Unknown BuildTime"
