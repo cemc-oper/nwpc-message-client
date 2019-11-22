@@ -31,6 +31,12 @@ Send messages for ecflow_client command.
 Messages are send to a rabbitmq server via a broker running by ecflow_client broker command.
 `
 
+const (
+	exchangeName = "nwpc-messsage"
+	routeKeyName = "command.ecflow.ecflow_client"
+	writeTimeOut = 2 * time.Second
+)
+
 var ecFlowClientCmd = &cobra.Command{
 	Use:   "ecflow-client",
 	Short: "send ecflow_client message to broker",
@@ -85,8 +91,8 @@ func sendMessageWithBroker(messageBytes []byte) error {
 	response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
 		Target: &pb.RabbitMQTarget{
 			Server:   rabbitmqServer,
-			Exchange: "nwpc-message",
-			RouteKey: "command.ecflow.ecflow_client",
+			Exchange: exchangeName,
+			RouteKey: routeKeyName,
 		},
 		Message: &pb.Message{
 			Data: messageBytes,
@@ -114,9 +120,9 @@ func sendMessageWithBroker(messageBytes []byte) error {
 func sendMessage(messageBytes []byte) error {
 	rabbitmqTarget := sender.RabbitMQTarget{
 		Server:       rabbitmqServer,
-		Exchange:     "nwpc-message",
-		RouteKey:     "command.ecflow_client",
-		WriteTimeout: 2 * time.Second,
+		Exchange:     exchangeName,
+		RouteKey:     routeKeyName,
+		WriteTimeout: writeTimeOut,
 	}
 
 	rabbitSender := sender.RabbitMQSender{
