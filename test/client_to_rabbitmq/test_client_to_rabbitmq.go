@@ -25,6 +25,11 @@ func init() {
 	rootCmd.Flags().IntVar(&workerCount, "worker-count", 40, "count of worker to send message")
 
 	rootCmd.MarkFlagRequired("rabbitmq-server")
+
+	log.SetFormatter(&log.TextFormatter{
+		TimestampFormat: "2006-01-02 15:04:05.999999",
+		FullTimestamp:   true,
+	})
 }
 
 var rootCmd = &cobra.Command{
