@@ -30,6 +30,11 @@ func init() {
 
 	rootCmd.MarkFlagRequired("broker-address")
 	rootCmd.MarkFlagRequired("rabbitmq-server")
+
+	log.SetFormatter(&log.TextFormatter{
+		TimestampFormat: "2006-01-02 15:04:05.999999",
+		FullTimestamp:   true,
+	})
 }
 
 var rootCmd = &cobra.Command{
@@ -38,12 +43,12 @@ var rootCmd = &cobra.Command{
 	Long:  "Test broker.",
 	Run: func(cmd *cobra.Command, args []string) {
 		for i := 0; i < workerCount; i++ {
-			go func() {
+			go func(index int) {
 				c := time.Tick(1 * time.Second)
 				for _ = range c {
-					SendMessage()
+					SendMessage(index)
 				}
-			}()
+			}(i)
 		}
 		select {}
 	},
@@ -55,7 +60,7 @@ func Execute() {
 	}
 }
 
-func SendMessage() {
+func SendMessage(index int) {
 	data, err := common.CreateEcflowClientMessage("--init=31134")
 	message := common.EventMessage{
 		App:  "nwpc-message-client",
@@ -67,18 +72,18 @@ func SendMessage() {
 	messageBytes, _ := json.Marshal(message)
 
 	log.WithFields(log.Fields{
-		"component": "ecflow-client",
-		"event":     "message",
-	}).Infof("%s", messageBytes)
+		"index": index,
+		"event": "start",
+	}).Infof("send message...")
 
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
 	conn, err := grpc.Dial(brokerAddress, opts...)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"component": "ecflow-client",
-			"event":     "connection",
-		}).Errorf("connect to broker has error: %v\n", err)
+			"index": index,
+			"event": "error",
+		}).Error("send message...error")
 		return
 	}
 
@@ -102,17 +107,22 @@ func SendMessage() {
 
 	if err != nil {
 		log.WithFields(log.Fields{
-			"component": "ecflow-client",
-			"event":     "send",
-		}).Errorf("send message has error: %v", err)
+			"index": index,
+			"event": "error",
+		}).Errorf("send message...error")
 		return
 	}
 
 	if response.ErrorNo != 0 {
 		log.WithFields(log.Fields{
-			"component": "ecflow-client",
-			"event":     "response",
-		}).Errorf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
+			"index": index,
+			"event": "error",
+		}).Errorf("send message...error")
 		return
 	}
+	log.WithFields(log.Fields{
+		"index": index,
+		"event": "success",
+	}).Info("send message...done")
+	return
 }
