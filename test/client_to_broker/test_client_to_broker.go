@@ -83,7 +83,7 @@ func SendMessage(index int) {
 		log.WithFields(log.Fields{
 			"index": index,
 			"event": "error",
-		}).Error("send message...error")
+		}).Errorf("send message...error: %v", err)
 		return
 	}
 
@@ -109,7 +109,7 @@ func SendMessage(index int) {
 		log.WithFields(log.Fields{
 			"index": index,
 			"event": "error",
-		}).Errorf("send message...error")
+		}).Errorf("send message...error: %v", err)
 		return
 	}
 
