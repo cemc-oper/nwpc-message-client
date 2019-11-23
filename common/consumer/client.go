@@ -69,7 +69,7 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 	}).Info("create queue... ecflow-client-queue")
 	queue, err := channel.QueueDeclare(
 		s.Source.Queue,
-		false,
+		true,
 		false,
 		false,
 		false,

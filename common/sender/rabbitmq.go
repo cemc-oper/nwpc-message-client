@@ -50,8 +50,9 @@ func (s *RabbitMQSender) SendMessage(message []byte) error {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        message,
+			ContentType:  "text/plain",
+			DeliveryMode: amqp.Persistent,
+			Body:         message,
 		})
 	if err != nil {
 		return fmt.Errorf("publish message has error: %s", err)
