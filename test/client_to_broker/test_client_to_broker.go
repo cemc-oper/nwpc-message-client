@@ -97,8 +97,8 @@ func SendMessage(index int) {
 	response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
 		Target: &pb.RabbitMQTarget{
 			Server:   rabbitmqServer,
-			Exchange: "ecflow-client",
-			RouteKey: "",
+			Exchange: "nwpc-message",
+			RouteKey: "command.ecflow.ecflow_client",
 		},
 		Message: &pb.Message{
 			Data: messageBytes,
