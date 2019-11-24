@@ -122,6 +122,23 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 
 	// load message from channel and handle
 	go func() {
+		// create elasticsearch client.
+		ctx := context.Background()
+		// can't connect to es in docker without the last two options.
+		// see https://github.com/olivere/elastic/issues/824
+		client, err := elastic.NewClient(
+			elastic.SetURL(s.Target.Server),
+			elastic.SetHealthcheck(false),
+			elastic.SetSniff(false),
+		)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"component": "elastic",
+				"event":     "connect",
+			}).Errorf("connect has error: %v", err)
+			panic(err)
+		}
+
 		for d := range messages {
 			// parse message to generate message index
 			log.WithFields(log.Fields{
@@ -143,22 +160,6 @@ func (s *EcflowClientConsumer) ConsumeMessages() error {
 			indexName := messageTime.Format("2006-01-02")
 
 			// send to elasticsearch
-			ctx := context.Background()
-			// can't connect to es in docker without the last two options.
-			// see https://github.com/olivere/elastic/issues/824
-			client, err := elastic.NewClient(
-				elastic.SetURL(s.Target.Server),
-				elastic.SetHealthcheck(false),
-				elastic.SetSniff(false),
-			)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"component": "elastic",
-					"event":     "connect",
-				}).Errorf("connect has error: %v", err)
-				panic(err)
-			}
-
 			messagePut, err := client.Index().
 				Index(indexName).
 				BodyJson(event).

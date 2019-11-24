@@ -145,27 +145,8 @@ func Consume() {
 	}
 
 	// load message from channel and handle
-	go func() {
-		for d := range messages {
-			// parse message to generate message index
-			log.WithFields(log.Fields{
-				"component": "consumer",
-				"event":     "message",
-			}).Infof("receive message...")
-
-			var event common.EventMessage
-			err := json.Unmarshal(d.Body, &event)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"component": "consumer",
-					"event":     "message",
-				}).Errorf("can't create EventMessage: %s", d.Body)
-				continue
-			}
-
-			messageTime := event.Time
-			indexName := messageTime.Format("2006-01-02")
-
+	for i := 0; i < 8; i++ {
+		go func() {
 			ctx := context.Background()
 			client, err := elastic.NewClient(
 				elastic.SetURL(elasticServer),
@@ -180,24 +161,50 @@ func Consume() {
 				return
 			}
 
-			_, err = client.Index().
-				Index(indexName).
-				BodyJson(event).
-				Do(ctx)
-			if err != nil {
+			for d := range messages {
+				// parse message to generate message index
+				log.WithFields(log.Fields{
+					"component": "consumer",
+					"event":     "message",
+				}).Infof("receive message...")
+
+				var event common.EventMessage
+				err := json.Unmarshal(d.Body, &event)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"component": "consumer",
+						"event":     "message",
+					}).Errorf("can't create EventMessage: %s", d.Body)
+					continue
+				}
+
 				log.WithFields(log.Fields{
 					"component": "elastic",
-					"event":     "index",
-				}).Errorf("%v", err)
-				return
-			}
+					"event":     "message",
+				}).Infof("receive message...parsed")
 
-			log.WithFields(log.Fields{
-				"component": "elastic",
-				"event":     "message",
-			}).Infof("receive message...done")
-		}
-	}()
+				messageTime := event.Time
+				indexName := messageTime.Format("2006-01-02")
+
+				_, err = client.Index().
+					Index(indexName).
+					BodyJson(event).
+					Do(ctx)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"component": "elastic",
+						"event":     "index",
+					}).Errorf("%v", err)
+					return
+				}
+
+				log.WithFields(log.Fields{
+					"component": "elastic",
+					"event":     "message",
+				}).Infof("receive message...done")
+			}
+		}()
+	}
 
 	select {}
 
