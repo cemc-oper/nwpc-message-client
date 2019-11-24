@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/streadway/amqp"
 	"os"
+	"time"
 )
 
 func main() {
@@ -54,6 +55,11 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+}
+
+type indexMessage struct {
+	Index   string
+	Message common.EventMessage
 }
 
 func Consume() {
@@ -145,7 +151,7 @@ func Consume() {
 	}
 
 	// load message from channel and handle
-	for i := 0; i < 8; i++ {
+	for i := 0; i < 1; i++ {
 		go func() {
 			ctx := context.Background()
 			client, err := elastic.NewClient(
@@ -161,47 +167,49 @@ func Consume() {
 				return
 			}
 
-			for d := range messages {
-				// parse message to generate message index
-				log.WithFields(log.Fields{
-					"component": "consumer",
-					"event":     "message",
-				}).Infof("receive message...")
+			var received []indexMessage
 
-				var event common.EventMessage
-				err := json.Unmarshal(d.Body, &event)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"component": "consumer",
-						"event":     "message",
-					}).Errorf("can't create EventMessage: %s", d.Body)
-					continue
-				}
-
-				log.WithFields(log.Fields{
-					"component": "elastic",
-					"event":     "message",
-				}).Infof("receive message...parsed")
-
-				messageTime := event.Time
-				indexName := messageTime.Format("2006-01-02")
-
-				_, err = client.Index().
-					Index(indexName).
-					BodyJson(event).
-					Do(ctx)
-				if err != nil {
+			for {
+				select {
+				case d := <-messages:
 					log.WithFields(log.Fields{
 						"component": "elastic",
-						"event":     "index",
-					}).Errorf("%v", err)
-					return
-				}
+						"event":     "message",
+					}).Infof("receive message...")
+					var event common.EventMessage
+					err := json.Unmarshal(d.Body, &event)
+					if err != nil {
+						log.WithFields(log.Fields{
+							"component": "consumer",
+							"event":     "message",
+						}).Errorf("can't create EventMessage: %s", d.Body)
+						continue
+					}
+					messageTime := event.Time
+					indexName := messageTime.Format("2006-01-02")
 
-				log.WithFields(log.Fields{
-					"component": "elastic",
-					"event":     "message",
-				}).Infof("receive message...done")
+					received = append(received, indexMessage{
+						indexName, event,
+					})
+					log.WithFields(log.Fields{
+						"component": "elastic",
+						"event":     "message",
+					}).Infof("receive message...parsed")
+
+					if len(received) > 20 {
+						log.Info("push...")
+						pushMessages(client, received, ctx)
+						log.Info("push...done")
+						received = nil
+					}
+				case <-time.After(time.Second * 1):
+					if len(received) > 0 {
+						log.Info("time limit push...")
+						pushMessages(client, received, ctx)
+						received = nil
+						log.Info("time limit push...done")
+					}
+				}
 			}
 		}()
 	}
@@ -209,4 +217,22 @@ func Consume() {
 	select {}
 
 	return
+}
+
+func pushMessages(client *elastic.Client, messages []indexMessage, ctx context.Context) {
+	bulkRequest := client.Bulk()
+	for _, indexMessage := range messages {
+		request := elastic.NewBulkIndexRequest().
+			Index(indexMessage.Index).
+			Doc(indexMessage.Message)
+		bulkRequest.Add(request)
+	}
+	_, err := bulkRequest.Do(ctx)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"component": "elastic",
+			"event":     "index",
+		}).Errorf("%v", err)
+		return
+	}
 }
