@@ -151,7 +151,7 @@ func Consume() {
 	}
 
 	// load message from channel and handle
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 2; i++ {
 		go func() {
 			ctx := context.Background()
 			client, err := elastic.NewClient(
