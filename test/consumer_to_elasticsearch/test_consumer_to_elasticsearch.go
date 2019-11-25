@@ -22,6 +22,8 @@ var (
 	elasticServer        = ""
 	rabbitmqExchangeName = "nwpc-message"
 	rabbitmqRouteKey     = "command.ecflow.*"
+	bulkSize             = 20
+	consumerCount        = 2
 )
 
 func init() {
@@ -31,6 +33,8 @@ func init() {
 		"rabbitmq-queue-name", "ecflow-client-queue", "rabbitmq queue name")
 	rootCmd.Flags().StringVar(&elasticServer,
 		"elasticsearch-server", "", "elasticsearch server")
+	rootCmd.Flags().IntVar(&bulkSize, "bulk-size", 20, "bulk size to send")
+	rootCmd.Flags().IntVar(&consumerCount, "consumer-count", 2, "consumer count")
 
 	rootCmd.MarkFlagRequired("rabbitmq-server")
 	rootCmd.MarkFlagRequired("rabbitmq-queue-name")
@@ -151,7 +155,7 @@ func Consume() {
 	}
 
 	// load message from channel and handle
-	for i := 0; i < 2; i++ {
+	for i := 0; i < consumerCount; i++ {
 		go func() {
 			ctx := context.Background()
 			client, err := elastic.NewClient(
@@ -196,7 +200,7 @@ func Consume() {
 						"event":     "message",
 					}).Infof("receive message...parsed")
 
-					if len(received) > 20 {
+					if len(received) > bulkSize {
 						log.Info("push...")
 						pushMessages(client, received, ctx)
 						log.Info("push...done")
