@@ -41,7 +41,9 @@ var ecflowClientCmd = &cobra.Command{
 			Target: consumer.ElasticSearchTarget{
 				Server: elasticServer,
 			},
-			Debug: true,
+			WorkerCount: 2,
+			BulkSize:    20,
+			Debug:       true,
 		}
 
 		err := consumer.ConsumeMessages()
