@@ -4,6 +4,9 @@ var (
 	rabbitmqServer    = ""
 	rabbitmqQueueName = ""
 	elasticServer     = ""
+	workerCount       = 2
+	bulkSize          = 20
+	isDebug           = true
 
 	Version   = "Unknown Version"
 	BuildTime = "Unknown BuildTime"

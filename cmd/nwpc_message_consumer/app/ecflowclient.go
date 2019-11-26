@@ -15,6 +15,9 @@ func init() {
 		"rabbitmq-queue-name", "ecflow-client-queue", "rabbitmq queue name")
 	ecflowClientCmd.Flags().StringVar(&elasticServer,
 		"elasticsearch-server", "", "elasticsearch server")
+	ecflowClientCmd.Flags().IntVar(&workerCount, "worker-count", 2, "worker count")
+	ecflowClientCmd.Flags().IntVar(&bulkSize, "bulk-size", 20, "bulk size")
+	ecflowClientCmd.Flags().BoolVar(&isDebug, "debug", true, "debug mode")
 
 	rootCmd.MarkFlagRequired("rabbitmq-server")
 	rootCmd.MarkFlagRequired("rabbitmq-queue-name")
@@ -41,9 +44,9 @@ var ecflowClientCmd = &cobra.Command{
 			Target: consumer.ElasticSearchTarget{
 				Server: elasticServer,
 			},
-			WorkerCount: 2,
-			BulkSize:    20,
-			Debug:       true,
+			WorkerCount: workerCount,
+			BulkSize:    bulkSize,
+			Debug:       isDebug,
 		}
 
 		err := consumer.ConsumeMessages()
