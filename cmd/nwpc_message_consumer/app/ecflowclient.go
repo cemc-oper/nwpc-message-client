@@ -24,10 +24,19 @@ func init() {
 	rootCmd.MarkFlagRequired("elastic-server")
 }
 
+const longDescription = `
+Consume ecflow_client message from rabbitmq and store them into elasticsearch.
+
+The command will use elasticsearch's Bulk API to send multiply messages 
+when some count of messages (default 20) are received or time limit (1 second) is reached.
+
+The command run multiply goroutines (like threads, default is 2) to receive messages.
+`
+
 var ecflowClientCmd = &cobra.Command{
 	Use:   "ecflow-client",
 	Short: "consume message from ecflow client command",
-	Long:  "consume message from ecflow client command",
+	Long:  longDescription,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.WithFields(log.Fields{
 			"component": "ecflow-client",
