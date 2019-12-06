@@ -21,8 +21,8 @@ func init() {
 	ecFlowClientCmd.Flags().BoolVar(&useBroker, "with-broker", true, "use a broker")
 	ecFlowClientCmd.Flags().StringVar(&brokerAddress, "broker-address", "", "broker address")
 
-	rootCmd.MarkFlagRequired("command-options")
-	rootCmd.MarkFlagRequired("rabbitmq-server")
+	ecFlowClientCmd.MarkFlagRequired("command-options")
+	ecFlowClientCmd.MarkFlagRequired("rabbitmq-server")
 }
 
 const EcflowClientMessageType = "ecflow-client"
