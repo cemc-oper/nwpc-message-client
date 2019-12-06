@@ -19,9 +19,9 @@ func init() {
 	ecflowClientCmd.Flags().IntVar(&bulkSize, "bulk-size", 20, "bulk size")
 	ecflowClientCmd.Flags().BoolVar(&isDebug, "debug", true, "debug mode")
 
-	rootCmd.MarkFlagRequired("rabbitmq-server")
-	rootCmd.MarkFlagRequired("rabbitmq-queue-name")
-	rootCmd.MarkFlagRequired("elastic-server")
+	ecflowClientCmd.MarkFlagRequired("rabbitmq-server")
+	ecflowClientCmd.MarkFlagRequired("rabbitmq-queue-name")
+	ecflowClientCmd.MarkFlagRequired("elastic-server")
 }
 
 const longDescription = `
