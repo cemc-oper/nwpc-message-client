@@ -32,8 +32,8 @@ Messages are send to a rabbitmq server via a broker running by ecflow_client bro
 `
 
 const (
-	exchangeName = "nwpc-messsage"
-	routeKeyName = "command.ecflow.ecflow_client"
+	exchangeName = "nwpc.operation.workflow"
+	routeKeyName = "ecflow.command.ecflow_client"
 	writeTimeOut = 2 * time.Second
 )
 

@@ -46,8 +46,8 @@ var ecflowClientCmd = &cobra.Command{
 		consumer := &consumer.EcflowClientConsumer{
 			Source: consumer.RabbitMQSource{
 				Server:   rabbitmqServer,
-				Exchange: "nwpc-message",
-				Topics:   []string{"command.ecflow.ecflow_client"},
+				Exchange: "nwpc.operation.workflow",
+				Topics:   []string{"ecflow.command.ecflow_client"},
 				Queue:    rabbitmqQueueName,
 			},
 			Target: consumer.ElasticSearchTarget{
