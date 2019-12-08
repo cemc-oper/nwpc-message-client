@@ -76,20 +76,28 @@ var productionCmd = &cobra.Command{
 		}).Infof("%s", messageBytes)
 
 		if useBroker {
-			return sendProductionMessageWithBroker(messageBytes)
+			return sendProductionMessageWithBroker(
+				rabbitmqServer,
+				productionExchangeName,
+				fmt.Sprintf("%s.production.%s", system, productionType),
+				messageBytes)
 		} else {
-			return sendProductionMessage(messageBytes)
+			return sendProductionMessage(
+				rabbitmqServer,
+				productionExchangeName,
+				fmt.Sprintf("%s.production.%s", system, productionType),
+				messageBytes)
 		}
 	},
 }
 
-func sendProductionMessageWithBroker(messageBytes []byte) error {
+func sendProductionMessageWithBroker(server string, exchange string, routeKey string, messageBytes []byte) error {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
 	conn, err := grpc.Dial(brokerAddress, opts...)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"component": "production",
+			"component": "sender",
 			"event":     "connection",
 		}).Errorf("connect to broker has error: %v\n", err)
 		return fmt.Errorf("connect to broker has error: %v\n", err)
@@ -104,9 +112,9 @@ func sendProductionMessageWithBroker(messageBytes []byte) error {
 
 	response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
 		Target: &pb.RabbitMQTarget{
-			Server:   rabbitmqServer,
-			Exchange: productionExchangeName,
-			RouteKey: fmt.Sprintf("%s.production.%s", system, productionType),
+			Server:   server,
+			Exchange: exchange,
+			RouteKey: routeKey,
 		},
 		Message: &pb.Message{
 			Data: messageBytes,
@@ -115,7 +123,7 @@ func sendProductionMessageWithBroker(messageBytes []byte) error {
 
 	if err != nil {
 		log.WithFields(log.Fields{
-			"component": "production",
+			"component": "sender",
 			"event":     "send",
 		}).Errorf("send message has error: %v", err)
 		return fmt.Errorf("send message has error: %v", err)
@@ -123,7 +131,7 @@ func sendProductionMessageWithBroker(messageBytes []byte) error {
 
 	if response.ErrorNo != 0 {
 		log.WithFields(log.Fields{
-			"component": "production",
+			"component": "sender",
 			"event":     "response",
 		}).Errorf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
 		return fmt.Errorf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
@@ -131,11 +139,11 @@ func sendProductionMessageWithBroker(messageBytes []byte) error {
 	return nil
 }
 
-func sendProductionMessage(messageBytes []byte) error {
+func sendProductionMessage(server string, exchange string, routeKey string, messageBytes []byte) error {
 	rabbitmqTarget := sender.RabbitMQTarget{
-		Server:       rabbitmqServer,
-		Exchange:     productionExchangeName,
-		RouteKey:     fmt.Sprintf("%s.production.%s", system, productionType),
+		Server:       server,
+		Exchange:     exchange,
+		RouteKey:     routeKey,
 		WriteTimeout: productionWriteTimeOut,
 	}
 
