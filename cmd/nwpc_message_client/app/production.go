@@ -1,15 +1,11 @@
 package app
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/common"
-	pb "github.com/nwpc-oper/nwpc-message-client/common/messagebroker"
-	"github.com/nwpc-oper/nwpc-message-client/common/sender"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 	"time"
 )
 
@@ -39,16 +35,11 @@ func init() {
 	productionCmd.MarkFlagRequired("rabbitmq-server")
 }
 
-const productionMessageType = "production"
+const ProductionMessageType = "production"
 const productionDescription = `
 Send messages for production.
 Messages are send to a rabbitmq server via a broker running by broker command.
 `
-
-const (
-	productionExchangeName = "nwpc.operation.production"
-	productionWriteTimeOut = 2 * time.Second
-)
 
 var productionCmd = &cobra.Command{
 	Use:   "production",
@@ -65,8 +56,8 @@ var productionCmd = &cobra.Command{
 		}
 
 		message := common.EventMessage{
-			App:  "nwpc-message-client",
-			Type: productionMessageType,
+			App:  appName,
+			Type: ProductionMessageType,
 			Time: time.Now(),
 			Data: data,
 		}
@@ -78,92 +69,9 @@ var productionCmd = &cobra.Command{
 			"event":     "message",
 		}).Infof("%s", messageBytes)
 
-		currentExchangeName := productionExchangeName
-		currentRouteKey := fmt.Sprintf("%s.production.%s", system, productionType)
+		exchangeName := "nwpc.operation.production"
+		routeKeyName := fmt.Sprintf("%s.production.%s", system, productionType)
 
-		if useBroker {
-			return sendProductionMessageWithBroker(
-				rabbitmqServer,
-				currentExchangeName,
-				currentRouteKey,
-				messageBytes)
-		} else {
-			return sendProductionMessage(
-				rabbitmqServer,
-				currentExchangeName,
-				currentRouteKey,
-				messageBytes)
-		}
+		return sendMessage(rabbitmqServer, exchangeName, routeKeyName, messageBytes)
 	},
-}
-
-func sendProductionMessageWithBroker(server string, exchange string, routeKey string, messageBytes []byte) error {
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithInsecure())
-	conn, err := grpc.Dial(brokerAddress, opts...)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"component": "sender",
-			"event":     "connection",
-		}).Errorf("connect to broker has error: %v\n", err)
-		return fmt.Errorf("connect to broker has error: %v\n", err)
-	}
-
-	defer conn.Close()
-
-	client := pb.NewMessageBrokerClient(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-	defer cancel()
-
-	response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
-		Target: &pb.RabbitMQTarget{
-			Server:   server,
-			Exchange: exchange,
-			RouteKey: routeKey,
-		},
-		Message: &pb.Message{
-			Data: messageBytes,
-		},
-	})
-
-	if err != nil {
-		log.WithFields(log.Fields{
-			"component": "sender",
-			"event":     "send",
-		}).Errorf("send message has error: %v", err)
-		return fmt.Errorf("send message has error: %v", err)
-	}
-
-	if response.ErrorNo != 0 {
-		log.WithFields(log.Fields{
-			"component": "sender",
-			"event":     "response",
-		}).Errorf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
-		return fmt.Errorf("send message return error code %d: %s", response.ErrorNo, response.ErrorMessage)
-	}
-	return nil
-}
-
-func sendProductionMessage(server string, exchange string, routeKey string, messageBytes []byte) error {
-	rabbitmqTarget := sender.RabbitMQTarget{
-		Server:       server,
-		Exchange:     exchange,
-		RouteKey:     routeKey,
-		WriteTimeout: productionWriteTimeOut,
-	}
-
-	rabbitSender := sender.RabbitMQSender{
-		Target: rabbitmqTarget,
-		Debug:  true,
-	}
-
-	if !disableDeliver {
-		err := rabbitSender.SendMessage(messageBytes)
-		if err != nil {
-			return fmt.Errorf("send messge has error: %s", err)
-		}
-	}
-
-	return nil
 }

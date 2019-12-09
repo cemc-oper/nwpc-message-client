@@ -1,5 +1,7 @@
 package app
 
+import "time"
+
 var (
 	brokerAddress  = ""
 	useBroker      = true
@@ -13,6 +15,8 @@ var (
 	status         = ""
 	startTime      = ""
 	forecastTime   = ""
+
+	writeTimeOut = 2 * time.Second
 
 	Version   = "Unknown version"
 	BuildTime = "Unknown build time"

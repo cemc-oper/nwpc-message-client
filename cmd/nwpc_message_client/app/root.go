@@ -12,8 +12,13 @@ func init() {
 	fmt.Println()
 }
 
+const (
+	appCommand = "nwpc_message_client"
+	appName    = "nwpc_message_client"
+)
+
 var rootCmd = &cobra.Command{
-	Use:   "nwpc_message_clinet",
+	Use:   appCommand,
 	Short: "A client for NWPC message.",
 	Long:  "A client for NWPC message.",
 	Run: func(cmd *cobra.Command, args []string) {
