@@ -18,10 +18,13 @@ func init() {
 
 	productionCmd.Flags().StringVar(&system, "system", "", "system")
 	productionCmd.Flags().StringVar(&productionType, "production-type", "", "production type")
-	productionCmd.Flags().StringVar(&event, "event", "", "event, such as storage")
-	productionCmd.Flags().StringVar(&status, "status", "completed", "status")
+	productionCmd.Flags().StringVar(&event, "event", "",
+		"production event, such as storage")
+	productionCmd.Flags().StringVar(&status, "status", "completed",
+		"event status, such as completed, aborted.")
 	productionCmd.Flags().StringVar(&startTime, "start-time", "", "start time, YYYYMMDDHH")
-	productionCmd.Flags().StringVar(&forecastTime, "forecast-time", "", "forecast time, FFFh, 0h, 12h, ...")
+	productionCmd.Flags().StringVar(&forecastTime, "forecast-time", "",
+		"forecast time, FFFh, 0h, 12h, ...")
 
 	productionCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "", "rabbitmq server")
 	productionCmd.Flags().BoolVar(&useBroker, "with-broker", true, "use a broker")
@@ -75,17 +78,20 @@ var productionCmd = &cobra.Command{
 			"event":     "message",
 		}).Infof("%s", messageBytes)
 
+		currentExchangeName := productionExchangeName
+		currentRouteKey := fmt.Sprintf("%s.production.%s", system, productionType)
+
 		if useBroker {
 			return sendProductionMessageWithBroker(
 				rabbitmqServer,
-				productionExchangeName,
-				fmt.Sprintf("%s.production.%s", system, productionType),
+				currentExchangeName,
+				currentRouteKey,
 				messageBytes)
 		} else {
 			return sendProductionMessage(
 				rabbitmqServer,
-				productionExchangeName,
-				fmt.Sprintf("%s.production.%s", system, productionType),
+				currentExchangeName,
+				currentRouteKey,
 				messageBytes)
 		}
 	},
