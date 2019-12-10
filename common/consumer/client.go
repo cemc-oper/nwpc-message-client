@@ -91,7 +91,8 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 			log.WithFields(log.Fields{
 				"component": "elastic",
 				"event":     "message",
-			}).Infof("receive message...")
+			}).Infof("received message...")
+
 			var event common.EventMessage
 			err := json.Unmarshal(d.Body, &event)
 			if err != nil {
@@ -101,6 +102,7 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 				}).Errorf("can't create EventMessage: %s", d.Body)
 				continue
 			}
+
 			messageTime := event.Time
 			indexName := messageTime.Format("2006-01-02")
 
@@ -114,18 +116,30 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 
 			if len(received) > consumer.BulkSize {
 				// send to elasticsearch
-				log.Info("push...")
+				log.WithFields(log.Fields{
+					"component": "elastic",
+					"event":     "push",
+				}).Info("bulk size push...")
 				pushMessages(client, received, ctx)
-				log.Info("push...done")
+				log.WithFields(log.Fields{
+					"component": "elastic",
+					"event":     "push",
+				}).Info("bulk size push...done")
 				received = nil
 			}
 		case <-time.After(time.Second * 1):
 			if len(received) > 0 {
 				// send to elasticsearch
-				log.Info("time limit push...")
+				log.WithFields(log.Fields{
+					"component": "elastic",
+					"event":     "push",
+				}).Info("time limit push...")
 				pushMessages(client, received, ctx)
+				log.WithFields(log.Fields{
+					"component": "elastic",
+					"event":     "push",
+				}).Info("time limit push...done")
 				received = nil
-				log.Info("time limit push...done")
 			}
 		}
 	}

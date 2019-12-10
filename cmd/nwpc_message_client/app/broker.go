@@ -29,13 +29,13 @@ var brokerCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.WithFields(log.Fields{
 			"component": "broker",
-			"event":     "server",
+			"event":     "connection",
 		}).Infof("listening on %s", brokerAddress)
 		lis, err := net.Listen("tcp", brokerAddress)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"component": "broker",
-				"event":     "server",
+				"event":     "connection",
 			}).Errorf("failed to listen: %v", err)
 			return fmt.Errorf("failed to listen: %v", err)
 		}

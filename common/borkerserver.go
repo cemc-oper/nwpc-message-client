@@ -17,7 +17,7 @@ type MessageBrokerServer struct {
 func (s *MessageBrokerServer) SendRabbitMQMessage(ctx context.Context, req *pb.RabbitMQMessage) (*pb.Response, error) {
 	log.WithFields(log.Fields{
 		"component": "broker",
-		"event":     "rabbitmq-message",
+		"event":     "message",
 	}).Infof("receiving message...%s\n", req.GetMessage().GetData())
 	rabbitmqTarget := sender.RabbitMQTarget{
 		Server:       req.GetTarget().GetServer(),

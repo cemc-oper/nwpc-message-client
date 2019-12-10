@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/segmentio/kafka-go"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -20,9 +21,7 @@ type KafkaSender struct {
 
 func (s *KafkaSender) SendMessage(message []byte) error {
 
-	if s.Debug {
-		fmt.Println("create writer...")
-	}
+	log.Debug("creating writer...")
 
 	w := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:      s.Target.Brokers,
@@ -31,10 +30,8 @@ func (s *KafkaSender) SendMessage(message []byte) error {
 		WriteTimeout: s.Target.WriteTimeout,
 	})
 
-	if s.Debug {
-		fmt.Println("create writer...done")
-		fmt.Println("send message...")
-	}
+	log.Debug("creating writer...done")
+	log.Debug("sending message...")
 
 	err := w.WriteMessages(context.Background(),
 		kafka.Message{
@@ -46,15 +43,12 @@ func (s *KafkaSender) SendMessage(message []byte) error {
 		return fmt.Errorf("send message failed: %s", err)
 	}
 
-	fmt.Printf("send message successful\n")
+	log.Info("sending message...done")
+	log.Debug("closing writer...")
 
-	if s.Debug {
-		fmt.Println("close writer...")
-	}
 	w.Close()
-	if s.Debug {
-		fmt.Println("close writer...done")
-	}
+
+	log.Debug("closing writer...done")
 
 	return nil
 }

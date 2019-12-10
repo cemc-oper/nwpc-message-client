@@ -9,12 +9,11 @@ import (
 func init() {
 	fmt.Println("NWPC Message Client")
 	fmt.Println("This program is under development. Please contact Wang Dapeng(3083) if it fails.")
-	fmt.Println()
 }
 
 const (
 	appCommand = "nwpc_message_client"
-	appName    = "nwpc_message_client"
+	appName    = "nwpc-message-client"
 )
 
 var rootCmd = &cobra.Command{

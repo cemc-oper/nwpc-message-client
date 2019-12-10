@@ -6,9 +6,10 @@ import (
 )
 
 type PrinterConsumer struct {
-	Source      RabbitMQSource
-	WorkerCount int
-	Debug       bool
+	Source       RabbitMQSource
+	WorkerCount  int
+	ConsumerName string
+	Debug        bool
 }
 
 func (s *PrinterConsumer) ConsumeMessages() error {
@@ -34,7 +35,7 @@ func (s *PrinterConsumer) ConsumeMessages() error {
 	}).Info("start to consume...")
 	messages, err := s.Source.channel.Consume(
 		s.Source.queue.Name,
-		"",
+		s.ConsumerName,
 		true,
 		false,
 		false,

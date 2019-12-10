@@ -38,7 +38,7 @@ func (source *RabbitMQSource) CreateConnection() error {
 	log.WithFields(log.Fields{
 		"component": "rabbitmq",
 		"event":     "connect",
-	}).Info("create exchange... ecflow-client")
+	}).Infof("create exchange...%s", source.Exchange)
 	err = source.channel.ExchangeDeclare(
 		source.Exchange,
 		"topic",
@@ -55,7 +55,7 @@ func (source *RabbitMQSource) CreateConnection() error {
 	log.WithFields(log.Fields{
 		"component": "rabbitmq",
 		"event":     "connect",
-	}).Info("create queue... ecflow-client-queue")
+	}).Infof("create queue...%s", source.Queue)
 	source.queue, err = source.channel.QueueDeclare(
 		source.Queue,
 		true,
@@ -86,7 +86,7 @@ func (source *RabbitMQSource) CreateConnection() error {
 			log.WithFields(log.Fields{
 				"component": "rabbitmq",
 				"event":     "connect",
-			}).Infof("bind queue...%s", topic)
+			}).Infof("bind queue...done, %s", topic)
 		}
 	}
 	return nil
