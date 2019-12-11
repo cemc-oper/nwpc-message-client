@@ -16,7 +16,7 @@ func init() {
 	productionCmd.Flags().StringVar(&productionType, "production-type", "", "production type")
 	productionCmd.Flags().StringVar(&event, "event", "",
 		"production event, such as storage")
-	productionCmd.Flags().StringVar(&status, "status", "completed",
+	productionCmd.Flags().StringVar(&status, "status", string(common.Complete),
 		"event status, such as completed, aborted.")
 	productionCmd.Flags().StringVar(&startTime, "start-time", "", "start time, YYYYMMDDHH")
 	productionCmd.Flags().StringVar(&forecastTime, "forecast-time", "",
@@ -50,7 +50,7 @@ var productionCmd = &cobra.Command{
 			System:       system,
 			Type:         productionType,
 			Event:        event,
-			Status:       status,
+			Status:       common.ToEventStatus(status),
 			StartTime:    startTime,
 			ForecastTime: forecastTime,
 		}
