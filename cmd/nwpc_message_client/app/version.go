@@ -11,7 +11,7 @@ func init() {
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print version information",
+	Short: "print version information",
 	Long:  "Print version information",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Version %s (%s)\n", Version, GitCommit)

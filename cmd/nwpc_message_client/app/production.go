@@ -22,9 +22,12 @@ func init() {
 	productionCmd.Flags().StringVar(&forecastTime, "forecast-time", "",
 		"forecast time, FFFh, 0h, 12h, ...")
 
-	productionCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "", "rabbitmq server")
-	productionCmd.Flags().BoolVar(&useBroker, "with-broker", true, "use a broker")
-	productionCmd.Flags().StringVar(&brokerAddress, "broker-address", "", "broker address")
+	productionCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "",
+		"rabbitmq server, such as amqp://guest:guest@host:port")
+	productionCmd.Flags().BoolVar(&useBroker, "with-broker", true,
+		"deliver message using a broker, should set --broker-address when enabled.")
+	productionCmd.Flags().StringVar(&brokerAddress, "broker-address", "",
+		"broker address, work with --with-broker")
 
 	productionCmd.MarkFlagRequired("system")
 	productionCmd.MarkFlagRequired("production-type")
@@ -38,12 +41,12 @@ func init() {
 const ProductionMessageType = "production"
 const productionDescription = `
 Send messages for production.
-Messages are send to a rabbitmq server via a broker running by broker command.
+Messages are send to a rabbitmq server directly or via a broker running by broker command.
 `
 
 var productionCmd = &cobra.Command{
 	Use:   "production",
-	Short: "send production message to broker",
+	Short: "send production messages",
 	Long:  productionDescription,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		data := common.ProductionData{

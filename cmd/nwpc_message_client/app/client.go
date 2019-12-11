@@ -11,10 +11,14 @@ import (
 func init() {
 	rootCmd.AddCommand(ecFlowClientCmd)
 
-	ecFlowClientCmd.Flags().StringVar(&commandOptions, "command-options", "", "command options")
-	ecFlowClientCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "", "rabbitmq server")
-	ecFlowClientCmd.Flags().BoolVar(&useBroker, "with-broker", true, "use a broker")
-	ecFlowClientCmd.Flags().StringVar(&brokerAddress, "broker-address", "", "broker address")
+	ecFlowClientCmd.Flags().StringVar(&commandOptions, "command-options", "",
+		"ecflow_client command options")
+	ecFlowClientCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "",
+		"rabbitmq server, such as amqp://guest:guest@host:port")
+	ecFlowClientCmd.Flags().BoolVar(&useBroker, "with-broker", true,
+		"deliver message using a broker, should set --broker-address when enabled.")
+	ecFlowClientCmd.Flags().StringVar(&brokerAddress, "broker-address", "",
+		"broker address, work with --with-broker")
 
 	ecFlowClientCmd.MarkFlagRequired("command-options")
 	ecFlowClientCmd.MarkFlagRequired("rabbitmq-server")
@@ -22,13 +26,13 @@ func init() {
 
 const EcflowClientMessageType = "ecflow-client"
 const ecflowClientDescription = `
-Send messages for ecflow_client command.
-Messages are send to a rabbitmq server via a broker running by ecflow_client broker command.
+Send messages for ecflow_client command. 
+Messages are send to a rabbitmq server directly or via a broker running by ecflow_client broker command.
 `
 
 var ecFlowClientCmd = &cobra.Command{
 	Use:   "ecflow-client",
-	Short: "send ecflow_client message to broker",
+	Short: "send ecflow_client command messages",
 	Long:  ecflowClientDescription,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		data, err := common.CreateEcflowClientMessage(commandOptions)

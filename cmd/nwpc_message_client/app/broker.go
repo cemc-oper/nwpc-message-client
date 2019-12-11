@@ -13,12 +13,15 @@ import (
 func init() {
 	rootCmd.AddCommand(brokerCmd)
 
-	brokerCmd.Flags().StringVar(&brokerAddress, "address", ":33383", "broker rpc address")
-	brokerCmd.Flags().BoolVar(&disableDeliver, "disable-deliver", false, "disable deliver messages to message queue.")
+	brokerCmd.Flags().StringVar(&brokerAddress, "address", ":33383",
+		"broker rpc address, use tcp port.")
+	brokerCmd.Flags().BoolVar(&disableDeliver, "disable-deliver", false,
+		"disable deliver messages to message queue, just for debug.")
 }
 
 const brokerDescription = `
-A broker for nwpc_message_client ecflow-client command.
+A broker for nwpc_message_client command. Messages will be transmitted to a rabbitmq server without any changes.
+
 Tasks running on parallel nodes should connect a broker on a login node to send messages.
 `
 
@@ -47,7 +50,7 @@ var brokerCmd = &cobra.Command{
 		}
 
 		pb.RegisterMessageBrokerServer(grpcServer, server)
-		grpcServer.Serve(lis)
-		return nil
+		err = grpcServer.Serve(lis)
+		return err
 	},
 }
