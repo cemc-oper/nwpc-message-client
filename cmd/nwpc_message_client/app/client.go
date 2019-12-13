@@ -19,6 +19,8 @@ func init() {
 		"deliver message using a broker, should set --broker-address when enabled.")
 	ecFlowClientCmd.Flags().StringVar(&brokerAddress, "broker-address", "",
 		"broker address, work with --with-broker")
+	ecFlowClientCmd.Flags().BoolVar(&disableSend, "disable-send", false,
+		"disable message deliver, just for debug.")
 
 	ecFlowClientCmd.MarkFlagRequired("command-options")
 	ecFlowClientCmd.MarkFlagRequired("rabbitmq-server")
@@ -57,6 +59,13 @@ var ecFlowClientCmd = &cobra.Command{
 		exchangeName := "nwpc.operation.workflow"
 		routeKeyName := "ecflow.command.ecflow_client"
 
+		if disableSend {
+			log.WithFields(log.Fields{
+				"component": "ecflow-client",
+				"event":     "send",
+			}).Infof("disable message deliver by --disable-send option.")
+			return nil
+		}
 		return sendMessage(rabbitmqServer, exchangeName, routeKeyName, messageBytes)
 	},
 }

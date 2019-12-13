@@ -3,11 +3,10 @@ package app
 import "time"
 
 var (
-	brokerAddress  = ""
-	useBroker      = true
-	disableDeliver = false
-	commandOptions = ""
 	rabbitmqServer = ""
+	disableSend    = false
+
+	commandOptions = ""
 
 	system         = ""
 	productionType = ""
@@ -15,6 +14,10 @@ var (
 	status         = ""
 	startTime      = ""
 	forecastTime   = ""
+
+	brokerAddress  = ""
+	useBroker      = true
+	disableDeliver = false
 
 	writeTimeOut = 2 * time.Second
 

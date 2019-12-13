@@ -29,6 +29,9 @@ func init() {
 	productionCmd.Flags().StringVar(&brokerAddress, "broker-address", "",
 		"broker address, work with --with-broker")
 
+	productionCmd.Flags().BoolVar(&disableSend, "disable-send", false,
+		"disable message deliver, just for debug.")
+
 	productionCmd.MarkFlagRequired("system")
 	productionCmd.MarkFlagRequired("production-type")
 	productionCmd.MarkFlagRequired("event")
@@ -71,10 +74,18 @@ var productionCmd = &cobra.Command{
 			"component": "production",
 			"event":     "message",
 		}).Infof("%s", messageBytes)
+		fmt.Printf("%s\n", messageBytes)
 
 		exchangeName := "nwpc.operation.production"
 		routeKeyName := fmt.Sprintf("%s.production.%s", system, productionType)
 
+		if disableSend {
+			log.WithFields(log.Fields{
+				"component": "ecflow-client",
+				"event":     "send",
+			}).Infof("disable message deliver by --disable-send option.")
+			return nil
+		}
 		return sendMessage(rabbitmqServer, exchangeName, routeKeyName, messageBytes)
 	},
 }
