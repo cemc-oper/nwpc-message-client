@@ -19,6 +19,9 @@ var (
 	useBroker      = true
 	disableDeliver = false
 
+	enableProfiling  = false
+	profilingAddress = "127.0.0.1:31485"
+
 	writeTimeOut = 2 * time.Second
 
 	Version   = "Unknown version"

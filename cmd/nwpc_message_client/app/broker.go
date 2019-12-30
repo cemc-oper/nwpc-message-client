@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 )
 
 func init() {
@@ -17,6 +19,10 @@ func init() {
 		"broker rpc address, use tcp port.")
 	brokerCmd.Flags().BoolVar(&disableDeliver, "disable-deliver", false,
 		"disable deliver messages to message queue, just for debug.")
+	brokerCmd.Flags().BoolVar(&enableProfiling, "enable-profiling", false,
+		"enable profiling, just for debug.")
+	brokerCmd.Flags().StringVar(&profilingAddress, "profiling-address", "127.0.0.1:31485",
+		"profiling address, just for debug.")
 }
 
 const brokerDescription = `
@@ -41,6 +47,13 @@ var brokerCmd = &cobra.Command{
 				"event":     "connection",
 			}).Errorf("failed to listen: %v", err)
 			return fmt.Errorf("failed to listen: %v", err)
+		}
+
+		if enableProfiling {
+			log.Infof("enable profiling...%s", profilingAddress)
+			go func() {
+				log.Println(http.ListenAndServe(profilingAddress, nil))
+			}()
 		}
 
 		grpcServer := grpc.NewServer()
