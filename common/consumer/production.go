@@ -103,8 +103,7 @@ func consumeProductionMessageToElastic(consumer *ProductionConsumer, messages <-
 				continue
 			}
 
-			messageTime := event.Time
-			indexName := messageTime.Format("2006-01")
+			indexName := getIndexForProductionMessage(event)
 
 			received = append(received, messageWithIndex{
 				indexName, event,
@@ -143,4 +142,10 @@ func consumeProductionMessageToElastic(consumer *ProductionConsumer, messages <-
 			}
 		}
 	}
+}
+
+func getIndexForProductionMessage(event common.EventMessage) string {
+	messageTime := event.Time
+	indexName := messageTime.Format("2006-01")
+	return indexName
 }
