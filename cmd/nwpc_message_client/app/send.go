@@ -9,9 +9,9 @@ import (
 func sendMessage(server string, exchange string, routeKey string, messageBytes []byte) error {
 	var currentSender sender.Sender
 	if useBroker {
-		currentSender = createBrokerSender(server, exchange, routeKey)
+		currentSender = createBrokerSender(brokerAddress, server, exchange, routeKey, writeTimeOut)
 	} else {
-		currentSender = createRabbitMQSender(server, exchange, routeKey)
+		currentSender = createRabbitMQSender(server, exchange, routeKey, writeTimeOut)
 	}
 
 	err := currentSender.SendMessage(messageBytes)
@@ -22,24 +22,33 @@ func sendMessage(server string, exchange string, routeKey string, messageBytes [
 	return nil
 }
 
-func createBrokerSender(server string, exchange string, routeKey string) sender.Sender {
+func createBrokerSender(
+	brokerAddress string,
+	rabbitMQServer string,
+	exchange string,
+	routeKey string,
+	writeTimeout time.Duration) sender.Sender {
 	brokerSender := sender.BrokerSender{
 		BrokerAddress:  brokerAddress,
-		RabbitMQServer: server,
+		RabbitMQServer: rabbitMQServer,
 		Exchange:       exchange,
 		RouteKey:       routeKey,
-		WriteTimeout:   time.Second * 2,
+		WriteTimeout:   writeTimeout,
 	}
 
 	return &brokerSender
 }
 
-func createRabbitMQSender(server string, exchange string, routeKey string) sender.Sender {
+func createRabbitMQSender(
+	server string,
+	exchange string,
+	routeKey string,
+	writeTimeout time.Duration) sender.Sender {
 	rabbitmqTarget := sender.RabbitMQTarget{
 		Server:       server,
 		Exchange:     exchange,
 		RouteKey:     routeKey,
-		WriteTimeout: writeTimeOut,
+		WriteTimeout: writeTimeout,
 	}
 
 	rabbitSender := sender.RabbitMQSender{
