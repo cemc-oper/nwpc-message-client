@@ -9,11 +9,8 @@ import (
 )
 
 type BrokerSender struct {
-	BrokerAddress  string
-	RabbitMQServer string
-	Exchange       string
-	RouteKey       string
-	WriteTimeout   time.Duration
+	BrokerAddress string
+	Target        RabbitMQTarget
 }
 
 func (s *BrokerSender) SendMessage(message []byte) error {
@@ -33,9 +30,9 @@ func (s *BrokerSender) SendMessage(message []byte) error {
 
 	response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
 		Target: &pb.RabbitMQTarget{
-			Server:   s.RabbitMQServer,
-			Exchange: s.Exchange,
-			RouteKey: s.RouteKey,
+			Server:   s.Target.Server,
+			Exchange: s.Target.Exchange,
+			RouteKey: s.Target.RouteKey,
 		},
 		Message: &pb.Message{
 			Data: message,

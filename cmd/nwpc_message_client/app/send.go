@@ -28,12 +28,16 @@ func createBrokerSender(
 	exchange string,
 	routeKey string,
 	writeTimeout time.Duration) sender.Sender {
+	rabbitmqTarget := sender.RabbitMQTarget{
+		Server:       rabbitMQServer,
+		Exchange:     exchange,
+		RouteKey:     routeKey,
+		WriteTimeout: writeTimeout,
+	}
+
 	brokerSender := sender.BrokerSender{
-		BrokerAddress:  brokerAddress,
-		RabbitMQServer: rabbitMQServer,
-		Exchange:       exchange,
-		RouteKey:       routeKey,
-		WriteTimeout:   writeTimeout,
+		BrokerAddress: brokerAddress,
+		Target:        rabbitmqTarget,
 	}
 
 	return &brokerSender
