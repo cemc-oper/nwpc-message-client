@@ -5,12 +5,24 @@ import (
 	"github.com/nwpc-oper/nwpc-message-client/common/sender"
 )
 
-func sendMessage(server string, exchange string, routeKey string, messageBytes []byte) error {
+type SenderType int
+
+const (
+	RabbitMQSenderType SenderType = iota
+	BrokerSenderType
+)
+
+func sendMessage(senderType SenderType, server string, exchange string, routeKey string, messageBytes []byte) error {
 	var currentSender sender.Sender
-	if useBroker {
-		currentSender = sender.CreateBrokerSender(brokerAddress, server, exchange, routeKey, writeTimeOut)
-	} else {
+	switch senderType {
+	case RabbitMQSenderType:
 		currentSender = sender.CreateRabbitMQSender(server, exchange, routeKey, writeTimeOut)
+		break
+	case BrokerSenderType:
+		currentSender = sender.CreateBrokerSender(brokerAddress, server, exchange, routeKey, writeTimeOut)
+		break
+	default:
+		return fmt.Errorf("SenderType is not supported: %d", senderType)
 	}
 
 	err := currentSender.SendMessage(messageBytes)

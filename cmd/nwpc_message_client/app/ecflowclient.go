@@ -69,6 +69,12 @@ var ecFlowClientCmd = &cobra.Command{
 			}).Infof("message deliver is disabled by --disable-send option.")
 			return nil
 		}
-		return sendMessage(rabbitmqServer, exchangeName, routeKeyName, messageBytes)
+
+		senderType := RabbitMQSenderType
+		if useBroker {
+			senderType = BrokerSenderType
+		}
+
+		return sendMessage(senderType, rabbitmqServer, exchangeName, routeKeyName, messageBytes)
 	},
 }
