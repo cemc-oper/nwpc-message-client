@@ -3,15 +3,14 @@ package app
 import (
 	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/common/sender"
-	"time"
 )
 
 func sendMessage(server string, exchange string, routeKey string, messageBytes []byte) error {
 	var currentSender sender.Sender
 	if useBroker {
-		currentSender = createBrokerSender(brokerAddress, server, exchange, routeKey, writeTimeOut)
+		currentSender = sender.CreateBrokerSender(brokerAddress, server, exchange, routeKey, writeTimeOut)
 	} else {
-		currentSender = createRabbitMQSender(server, exchange, routeKey, writeTimeOut)
+		currentSender = sender.CreateRabbitMQSender(server, exchange, routeKey, writeTimeOut)
 	}
 
 	err := currentSender.SendMessage(messageBytes)
@@ -20,45 +19,4 @@ func sendMessage(server string, exchange string, routeKey string, messageBytes [
 	}
 
 	return nil
-}
-
-func createBrokerSender(
-	brokerAddress string,
-	rabbitMQServer string,
-	exchange string,
-	routeKey string,
-	writeTimeout time.Duration) sender.Sender {
-	rabbitmqTarget := sender.RabbitMQTarget{
-		Server:       rabbitMQServer,
-		Exchange:     exchange,
-		RouteKey:     routeKey,
-		WriteTimeout: writeTimeout,
-	}
-
-	brokerSender := sender.BrokerSender{
-		BrokerAddress: brokerAddress,
-		Target:        rabbitmqTarget,
-	}
-
-	return &brokerSender
-}
-
-func createRabbitMQSender(
-	server string,
-	exchange string,
-	routeKey string,
-	writeTimeout time.Duration) sender.Sender {
-	rabbitmqTarget := sender.RabbitMQTarget{
-		Server:       server,
-		Exchange:     exchange,
-		RouteKey:     routeKey,
-		WriteTimeout: writeTimeout,
-	}
-
-	rabbitSender := sender.RabbitMQSender{
-		Target: rabbitmqTarget,
-		Debug:  true,
-	}
-
-	return &rabbitSender
 }
