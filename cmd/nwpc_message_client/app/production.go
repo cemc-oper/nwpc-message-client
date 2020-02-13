@@ -12,18 +12,23 @@ import (
 func init() {
 	rootCmd.AddCommand(productionCmd)
 
-	productionCmd.Flags().StringVar(&system, "system", "", "system")
-	productionCmd.Flags().StringVar(&productionType, "production-type", "", "production type")
+	productionCmd.Flags().StringVar(&system, "system", "",
+		"system name, such as grapes_gfs_gmf")
+	productionCmd.Flags().StringVar(&productionType, "production-type", "",
+		"production type, such as prod_grib")
 	productionCmd.Flags().StringVar(&event, "event", "",
 		"production event, such as storage")
 	productionCmd.Flags().StringVar(&status, "status", string(common.Complete),
 		"event status, such as completed, aborted.")
-	productionCmd.Flags().StringVar(&startTime, "start-time", "", "start time, YYYYMMDDHH")
+
+	productionCmd.Flags().StringVar(&startTime, "start-time", "",
+		"start time, YYYYMMDDHH")
 	productionCmd.Flags().StringVar(&forecastTime, "forecast-time", "",
 		"forecast time, FFFh, 0h, 12h, ...")
 
 	productionCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "",
 		"rabbitmq server, such as amqp://guest:guest@host:port")
+
 	productionCmd.Flags().BoolVar(&useBroker, "with-broker", true,
 		"deliver message using a broker, should set --broker-address when enabled.")
 	productionCmd.Flags().StringVar(&brokerAddress, "broker-address", "",
@@ -81,9 +86,9 @@ var productionCmd = &cobra.Command{
 
 		if disableSend {
 			log.WithFields(log.Fields{
-				"component": "ecflow-client",
+				"component": "production",
 				"event":     "send",
-			}).Infof("disable message deliver by --disable-send option.")
+			}).Infof("message deliver is disabled by --disable-send option.")
 			return nil
 		}
 		return sendMessage(rabbitmqServer, exchangeName, routeKeyName, messageBytes)

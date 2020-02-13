@@ -17,8 +17,10 @@ func init() {
 
 	brokerCmd.Flags().StringVar(&brokerAddress, "address", ":33383",
 		"broker rpc address, use tcp port.")
+
 	brokerCmd.Flags().BoolVar(&disableDeliver, "disable-deliver", false,
 		"disable deliver messages to message queue, just for debug.")
+
 	brokerCmd.Flags().BoolVar(&enableProfiling, "enable-profiling", false,
 		"enable profiling, just for debug.")
 	brokerCmd.Flags().StringVar(&profilingAddress, "profiling-address", "127.0.0.1:31485",
@@ -26,14 +28,15 @@ func init() {
 }
 
 const brokerDescription = `
-A broker for nwpc_message_client command. Messages will be transmitted to a rabbitmq server without any changes.
+A broker for nwpc_message_client command. 
+Messages will be transmitted to a rabbitmq server without any changes.
 
-Tasks running on parallel nodes should connect a broker on a login node to send messages.
+Tasks running on parallel nodes should connect a broker running on a login node to send messages.
 `
 
 var brokerCmd = &cobra.Command{
 	Use:   "broker",
-	Short: "broker for nwpc_message_client",
+	Short: "A broker for NWPC Message Client",
 	Long:  brokerDescription,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.WithFields(log.Fields{

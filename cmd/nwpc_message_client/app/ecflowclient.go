@@ -13,12 +13,15 @@ func init() {
 
 	ecFlowClientCmd.Flags().StringVar(&commandOptions, "command-options", "",
 		"ecflow_client command options")
+
 	ecFlowClientCmd.Flags().StringVar(&rabbitmqServer, "rabbitmq-server", "",
 		"rabbitmq server, such as amqp://guest:guest@host:port")
+
 	ecFlowClientCmd.Flags().BoolVar(&useBroker, "with-broker", true,
 		"deliver message using a broker, should set --broker-address when enabled.")
 	ecFlowClientCmd.Flags().StringVar(&brokerAddress, "broker-address", "",
 		"broker address, work with --with-broker")
+
 	ecFlowClientCmd.Flags().BoolVar(&disableSend, "disable-send", false,
 		"disable message deliver, just for debug.")
 
@@ -29,12 +32,12 @@ func init() {
 const EcflowClientMessageType = "ecflow-client"
 const ecflowClientDescription = `
 Send messages for ecflow_client command. 
-Messages are send to a rabbitmq server directly or via a broker running by ecflow_client broker command.
+Messages are send to a rabbitmq server directly or via a broker running by nwpc_message_client broker command.
 `
 
 var ecFlowClientCmd = &cobra.Command{
 	Use:   "ecflow-client",
-	Short: "send ecflow_client command messages",
+	Short: "send messages for ecflow_client command",
 	Long:  ecflowClientDescription,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		data, err := common.CreateEcflowClientMessage(commandOptions)
@@ -63,7 +66,7 @@ var ecFlowClientCmd = &cobra.Command{
 			log.WithFields(log.Fields{
 				"component": "ecflow-client",
 				"event":     "send",
-			}).Infof("disable message deliver by --disable-send option.")
+			}).Infof("message deliver is disabled by --disable-send option.")
 			return nil
 		}
 		return sendMessage(rabbitmqServer, exchangeName, routeKeyName, messageBytes)
