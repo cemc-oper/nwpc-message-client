@@ -15,11 +15,11 @@ func init() {
 	productionCmd.Flags().StringVar(&system, "system", "",
 		"system name, such as grapes_gfs_gmf")
 	productionCmd.Flags().StringVar(&productionType, "production-type", "",
-		"production type, such as prod_grib")
+		fmt.Sprintf("production type, such as %s", common.ProductionTypeGrib2))
 	productionCmd.Flags().StringVar(&event, "event", "",
-		"production event, such as storage")
+		fmt.Sprintf("production event, such as %s", common.ProductionEventStorage))
 	productionCmd.Flags().StringVar(&status, "status", string(common.Complete),
-		"event status, such as completed, aborted.")
+		fmt.Sprintf("event status, such as %s, %s", common.Complete, common.Aborted))
 
 	productionCmd.Flags().StringVar(&startTime, "start-time", "",
 		"start time, YYYYMMDDHH")
@@ -59,8 +59,8 @@ var productionCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		data := common.ProductionData{
 			System:       system,
-			Type:         productionType,
-			Event:        event,
+			Type:         common.ProductionType(productionType),
+			Event:        common.ProductionEvent(event),
 			Status:       common.ToEventStatus(status),
 			StartTime:    startTime,
 			ForecastTime: forecastTime,
