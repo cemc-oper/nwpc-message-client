@@ -57,13 +57,17 @@ var productionCmd = &cobra.Command{
 	Short: "send production messages",
 	Long:  productionDescription,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		data := common.ProductionData{
-			System:       system,
-			Type:         common.ProductionType(productionType),
-			Event:        common.ProductionEvent(event),
-			Status:       common.ToEventStatus(status),
+		data := common.OperationProductionData{
+			ProductionInfo: common.ProductionInfo{
+				System: system,
+				Type:   common.ProductionType(productionType),
+			},
 			StartTime:    startTime,
 			ForecastTime: forecastTime,
+			ProductionEventStatus: common.ProductionEventStatus{
+				Event:  common.ProductionEvent(event),
+				Status: common.ToEventStatus(status),
+			},
 		}
 
 		message := common.EventMessage{
