@@ -3,11 +3,12 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	flags "github.com/jessevdk/go-flags"
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	"github.com/nwpc-oper/nwpc-message-client/common/sender"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"strings"
 	"time"
 )
 
@@ -142,27 +143,48 @@ func newProductionCommand() *productionCommand {
 	productionCmd.MarkFlagRequired("production-stream")
 	productionCmd.MarkFlagRequired("event")
 
-	productionCmd.MarkFlagRequired("start-time")
-	productionCmd.MarkFlagRequired("forecast-time")
-
 	productionCmd.MarkFlagRequired("rabbitmq-server")
 
 	pc.cmd = productionCmd
 	return pc
 }
 
+const RequiredOption = "REQUIRED_OPTION"
+
 func (pc *productionCommand) getOperationData(
 	cmd *cobra.Command, args []string,
 ) (common.OperationProductionData, error) {
-	var opts struct {
-		StartTime    string `long:"start-time" description:"start time, YYYYMMDDHH" required:"true"`
-		ForecastTime string `long:"forecast-time" description:"forecast time, FFFh, 0h, 12h, ..." required:"true"`
+	var startTime string
+	var forecastTime string
+
+	operFlagSet := pflag.NewFlagSet("oper", pflag.ContinueOnError)
+	operFlagSet.ParseErrorsWhitelist.UnknownFlags = true
+
+	operFlagSet.StringVar(&startTime, "start-time", "",
+		"start time, YYYYMMDDHH")
+	operFlagSet.StringVar(&forecastTime, "forecast-time", "",
+		"forecast time, FFFh, 0h, 12h, ...")
+	operFlagSet.SetAnnotation("start-time", RequiredOption, []string{"true"})
+	operFlagSet.SetAnnotation("forecast-time", RequiredOption, []string{"true"})
+
+	err := operFlagSet.Parse(args)
+	if err != nil {
+		return common.OperationProductionData{}, fmt.Errorf("parse options has error: %s", err)
 	}
 
-	parser := flags.NewParser(&opts, flags.IgnoreUnknown)
-	_, err := parser.ParseArgs(args)
-	if err != nil {
-		return common.OperationProductionData{}, fmt.Errorf("parse options has error: %v", err)
+	var missingFlagNames []string
+	operFlagSet.VisitAll(func(flag *pflag.Flag) {
+		requiredAnnotation, found := flag.Annotations[RequiredOption]
+		if !found {
+			return
+		}
+		if (requiredAnnotation[0] == "true") && !flag.Changed {
+			missingFlagNames = append(missingFlagNames, flag.Name)
+		}
+	})
+	if len(missingFlagNames) > 0 {
+		return common.OperationProductionData{},
+			fmt.Errorf(`required flag(s) "%s" not set`, strings.Join(missingFlagNames, `", "`))
 	}
 
 	data := common.OperationProductionData{
@@ -170,8 +192,8 @@ func (pc *productionCommand) getOperationData(
 			System: pc.system,
 			Type:   common.ProductionType(pc.productionType),
 		},
-		StartTime:    opts.StartTime,
-		ForecastTime: opts.ForecastTime,
+		StartTime:    startTime,
+		ForecastTime: forecastTime,
 		ProductionEventStatus: common.ProductionEventStatus{
 			Event:  common.ProductionEvent(pc.event),
 			Status: common.ToEventStatus(pc.status),
