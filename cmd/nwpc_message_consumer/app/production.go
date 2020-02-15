@@ -38,9 +38,9 @@ func (c *productionCommand) consumeProduction(cmd *cobra.Command, args []string)
 		currentConsumer = createPrinterConsumer(currentSource, c.workerCount, c.isDebug)
 	} else if c.consumerType == "elasticsearch" {
 		target := consumer.ElasticSearchTarget{
-			Server: elasticServer,
+			Server: c.elasticServer,
 		}
-		currentConsumer = createElasticSearchConsumer(currentSource, target, c.workerCount, c.isDebug)
+		currentConsumer = createElasticSearchConsumer(currentSource, target, c.workerCount, c.bulkSize, c.isDebug)
 	}
 
 	if currentConsumer == nil {
@@ -97,7 +97,11 @@ func newProductionCommand() *productionCommand {
 	return pc
 }
 
-func createPrinterConsumer(source consumer.RabbitMQSource, workerCount int, debug bool) *consumer.PrinterConsumer {
+func createPrinterConsumer(
+	source consumer.RabbitMQSource,
+	workerCount int,
+	debug bool,
+) *consumer.PrinterConsumer {
 	printerConsumer := &consumer.PrinterConsumer{
 		Source:      source,
 		WorkerCount: workerCount,
@@ -109,7 +113,10 @@ func createPrinterConsumer(source consumer.RabbitMQSource, workerCount int, debu
 func createElasticSearchConsumer(
 	source consumer.RabbitMQSource,
 	target consumer.ElasticSearchTarget,
-	workerCount int, debug bool) *consumer.ProductionConsumer {
+	workerCount int,
+	bulkSize int,
+	debug bool,
+) *consumer.ProductionConsumer {
 	elasticSearchConsumer := &consumer.ProductionConsumer{
 		Source:      source,
 		Target:      target,
