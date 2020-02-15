@@ -18,17 +18,21 @@ Messages are send to a rabbitmq server directly or via a broker running by broke
 
 type productionCommand struct {
 	BaseCommand
+
 	system         string
 	productionType string
 	event          string
 	status         string
 	startTime      string
 	forecastTime   string
-	useBroker      bool
-	brokerAddress  string
+
 	rabbitmqServer string
-	disableSend    bool
 	writeTimeout   time.Duration
+
+	useBroker     bool
+	brokerAddress string
+
+	disableSend bool
 }
 
 func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error {

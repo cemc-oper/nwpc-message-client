@@ -18,12 +18,16 @@ Messages are send to a rabbitmq server directly or via a broker running by nwpc_
 
 type ecflowClientCommand struct {
 	BaseCommand
+
 	commandOptions string
-	useBroker      bool
+
 	rabbitmqServer string
-	brokerAddress  string
-	disableSend    bool
 	writeTimeout   time.Duration
+
+	useBroker     bool
+	brokerAddress string
+
+	disableSend bool
 }
 
 func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) error {
