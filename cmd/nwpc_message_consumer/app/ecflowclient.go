@@ -37,20 +37,24 @@ func (c *ecflowClientCommand) consumerEcflowClient(cmd *cobra.Command, args []st
 		"event":     "consumer",
 	}).Info("start to consume...")
 
-	ecConsumer := &consumer.EcflowClientConsumer{
-		Source: consumer.RabbitMQSource{
-			Server:   c.rabbitmqServer,
-			Exchange: "nwpc.operation.workflow",
-			Topics:   []string{"ecflow.command.ecflow_client"},
-			Queue:    c.rabbitmqQueueName,
-		},
-		Target: consumer.ElasticSearchTarget{
-			Server: c.elasticServer,
-		},
-		WorkerCount: c.workerCount,
-		BulkSize:    c.bulkSize,
-		Debug:       c.isDebug,
+	source := consumer.RabbitMQSource{
+		Server:   c.rabbitmqServer,
+		Exchange: "nwpc.operation.workflow",
+		Topics:   []string{"ecflow.command.ecflow_client"},
+		Queue:    c.rabbitmqQueueName,
 	}
+
+	target := consumer.ElasticSearchTarget{
+		Server: c.elasticServer,
+	}
+
+	ecConsumer := createEcflowClientConsumer(
+		source,
+		target,
+		c.workerCount,
+		c.bulkSize,
+		c.isDebug,
+	)
 
 	err := ecConsumer.ConsumeMessages()
 	if err != nil {

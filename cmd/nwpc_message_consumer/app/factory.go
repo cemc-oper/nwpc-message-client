@@ -38,3 +38,20 @@ func createElasticSearchConsumer(
 	}
 	return elasticSearchConsumer
 }
+
+func createEcflowClientConsumer(
+	source consumer.RabbitMQSource,
+	target consumer.ElasticSearchTarget,
+	workerCount int,
+	bulkSize int,
+	debug bool,
+) *consumer.EcflowClientConsumer {
+	ecConsumer := &consumer.EcflowClientConsumer{
+		Source:      source,
+		Target:      target,
+		WorkerCount: workerCount,
+		BulkSize:    bulkSize,
+		Debug:       debug,
+	}
+	return ecConsumer
+}
