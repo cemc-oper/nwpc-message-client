@@ -45,7 +45,7 @@ func (c *productionCommand) consumeProduction(cmd *cobra.Command, args []string)
 	}
 
 	if currentConsumer == nil {
-		log.Fatal("consumer type is not supported: %s", c.consumerType)
+		log.Fatalf("consumer type is not supported: %s", c.consumerType)
 		return nil
 	}
 
