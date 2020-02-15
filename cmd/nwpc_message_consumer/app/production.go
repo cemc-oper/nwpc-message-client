@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(productionCmd)
+	//rootCmd.AddCommand(productionCmd)
 
 	productionCmd.Flags().StringVar(&rabbitmqServer,
 		"rabbitmq-server", "", "rabbitmq server")

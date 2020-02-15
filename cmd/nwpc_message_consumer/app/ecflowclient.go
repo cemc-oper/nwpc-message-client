@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(ecflowClientCmd)
+	//rootCmd.AddCommand(ecflowClientCmd)
 
 	ecflowClientCmd.Flags().StringVar(&rabbitmqServer,
 		"rabbitmq-server", "", "rabbitmq server")
