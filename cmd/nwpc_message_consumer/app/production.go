@@ -12,13 +12,18 @@ Consume production message from rabbitmq and store them into elasticsearch.
 
 type productionCommand struct {
 	BaseCommand
+
+	consumerType string
+
 	rabbitmqServer    string
 	rabbitmqQueueName string
-	elasticServer     string
-	workerCount       int
-	bulkSize          int
-	isDebug           bool
-	consumerType      string
+
+	elasticServer string
+
+	workerCount int
+	bulkSize    int
+
+	isDebug bool
 }
 
 func (c *productionCommand) consumeProduction(cmd *cobra.Command, args []string) error {
@@ -30,9 +35,9 @@ func (c *productionCommand) consumeProduction(cmd *cobra.Command, args []string)
 		Queue:    c.rabbitmqQueueName,
 	}
 
-	if c.consumerType == "print" {
+	if c.consumerType == string(printerConsumerType) {
 		currentConsumer = createPrinterConsumer(currentSource, c.workerCount, c.isDebug)
-	} else if c.consumerType == "elasticsearch" {
+	} else if c.consumerType == string(elasticsearchConsumerType) {
 		target := consumer.ElasticSearchTarget{
 			Server: c.elasticServer,
 		}
@@ -91,34 +96,4 @@ func newProductionCommand() *productionCommand {
 	pc.cmd = productionCmd
 
 	return pc
-}
-
-func createPrinterConsumer(
-	source consumer.RabbitMQSource,
-	workerCount int,
-	debug bool,
-) *consumer.PrinterConsumer {
-	printerConsumer := &consumer.PrinterConsumer{
-		Source:      source,
-		WorkerCount: workerCount,
-		Debug:       debug,
-	}
-	return printerConsumer
-}
-
-func createElasticSearchConsumer(
-	source consumer.RabbitMQSource,
-	target consumer.ElasticSearchTarget,
-	workerCount int,
-	bulkSize int,
-	debug bool,
-) *consumer.ProductionConsumer {
-	elasticSearchConsumer := &consumer.ProductionConsumer{
-		Source:      source,
-		Target:      target,
-		WorkerCount: workerCount,
-		BulkSize:    bulkSize,
-		Debug:       debug,
-	}
-	return elasticSearchConsumer
 }

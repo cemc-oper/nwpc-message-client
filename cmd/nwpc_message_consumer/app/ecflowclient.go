@@ -17,13 +17,18 @@ The command run multiply goroutines (like threads, default is 2) to receive mess
 
 type ecflowClientCommand struct {
 	BaseCommand
+
+	consumerType string
+
 	rabbitmqServer    string
 	rabbitmqQueueName string
-	elasticServer     string
-	workerCount       int
-	bulkSize          int
-	isDebug           bool
-	consumerType      string
+
+	elasticServer string
+
+	workerCount int
+	bulkSize    int
+
+	isDebug bool
 }
 
 func (c *ecflowClientCommand) consumerEcflowClient(cmd *cobra.Command, args []string) error {
