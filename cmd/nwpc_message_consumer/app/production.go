@@ -6,74 +6,95 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	//rootCmd.AddCommand(productionCmd)
-
-	productionCmd.Flags().StringVar(&rabbitmqServer,
-		"rabbitmq-server", "", "rabbitmq server")
-	productionCmd.Flags().StringVar(&rabbitmqQueueName,
-		"rabbitmq-queue-name", "", "rabbitmq queue name")
-
-	productionCmd.Flags().StringVar(&consumerType,
-		"consumer-type", "print", "consumer type")
-
-	productionCmd.Flags().IntVar(&workerCount, "worker-count", 2, "worker count")
-
-	productionCmd.Flags().StringVar(&elasticServer,
-		"elasticsearch-server", "", "elasticsearch server")
-	productionCmd.Flags().IntVar(&bulkSize, "bulk-size", 20, "bulk size")
-
-	productionCmd.Flags().BoolVar(&isDebug, "debug", true, "debug mode")
-
-	productionCmd.MarkFlagRequired("rabbitmq-server")
-	productionCmd.MarkFlagRequired("rabbitmq-queue-name")
-}
-
 const productionLongDescription = `
 Consume production message from rabbitmq and store them into elasticsearch.
 `
 
-var productionCmd = &cobra.Command{
-	Use:   "production",
-	Short: "consume production message",
-	Long:  productionLongDescription,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var currentConsumer consumer.Consumer = nil
-		currentSource := consumer.RabbitMQSource{
-			Server:   rabbitmqServer,
-			Exchange: "nwpc.operation.production",
-			Topics:   []string{"*.production.*"},
-			Queue:    rabbitmqQueueName,
-		}
+type productionCommand struct {
+	cmd               *cobra.Command
+	rabbitmqServer    string
+	rabbitmqQueueName string
+	elasticServer     string
+	workerCount       int
+	bulkSize          int
+	isDebug           bool
+	consumerType      string
+}
 
-		if consumerType == "print" {
-			currentConsumer = createPrinterConsumer(currentSource, workerCount, isDebug)
-		} else if consumerType == "elasticsearch" {
-			target := consumer.ElasticSearchTarget{
-				Server: elasticServer,
-			}
-			currentConsumer = createElasticSearchConsumer(currentSource, target, workerCount, isDebug)
-		}
+func (c *productionCommand) getCommand() *cobra.Command {
+	return c.cmd
+}
 
-		if currentConsumer == nil {
-			log.Fatal("consumer type is not supported: %s", consumerType)
-			return nil
-		}
+func (c *productionCommand) consumeProduction(cmd *cobra.Command, args []string) error {
+	var currentConsumer consumer.Consumer = nil
+	currentSource := consumer.RabbitMQSource{
+		Server:   c.rabbitmqServer,
+		Exchange: "nwpc.operation.production",
+		Topics:   []string{"*.production.*"},
+		Queue:    c.rabbitmqQueueName,
+	}
 
+	if c.consumerType == "print" {
+		currentConsumer = createPrinterConsumer(currentSource, c.workerCount, c.isDebug)
+	} else if c.consumerType == "elasticsearch" {
+		target := consumer.ElasticSearchTarget{
+			Server: elasticServer,
+		}
+		currentConsumer = createElasticSearchConsumer(currentSource, target, c.workerCount, c.isDebug)
+	}
+
+	if currentConsumer == nil {
+		log.Fatal("consumer type is not supported: %s", c.consumerType)
+		return nil
+	}
+
+	log.WithFields(log.Fields{
+		"component": "production",
+		"event":     "consumer",
+	}).Info("start to consume...")
+
+	err := currentConsumer.ConsumeMessages()
+	if err != nil {
 		log.WithFields(log.Fields{
 			"component": "production",
 			"event":     "consumer",
-		}).Info("start to consume...")
+		}).Errorf("%v", err)
+	}
+	return err
+}
 
-		err := currentConsumer.ConsumeMessages()
-		if err != nil {
-			log.WithFields(log.Fields{
-				"component": "production",
-				"event":     "consumer",
-			}).Errorf("%v", err)
-		}
-		return err
-	},
+func newProductionCommand() *productionCommand {
+	pc := &productionCommand{}
+
+	productionCmd := &cobra.Command{
+		Use:   "production",
+		Short: "consume production message",
+		Long:  productionLongDescription,
+		RunE:  pc.consumeProduction,
+	}
+
+	productionCmd.Flags().StringVar(&pc.rabbitmqServer,
+		"rabbitmq-server", "", "rabbitmq server")
+	productionCmd.Flags().StringVar(&pc.rabbitmqQueueName,
+		"rabbitmq-queue-name", "", "rabbitmq queue name")
+
+	productionCmd.Flags().StringVar(&pc.consumerType,
+		"consumer-type", "print", "consumer type")
+
+	productionCmd.Flags().IntVar(&pc.workerCount, "worker-count", 2, "worker count")
+
+	productionCmd.Flags().StringVar(&pc.elasticServer,
+		"elasticsearch-server", "", "elasticsearch server")
+	productionCmd.Flags().IntVar(&pc.bulkSize, "bulk-size", 20, "bulk size")
+
+	productionCmd.Flags().BoolVar(&pc.isDebug, "debug", true, "debug mode")
+
+	productionCmd.MarkFlagRequired("rabbitmq-server")
+	productionCmd.MarkFlagRequired("rabbitmq-queue-name")
+
+	pc.cmd = productionCmd
+
+	return pc
 }
 
 func createPrinterConsumer(source consumer.RabbitMQSource, workerCount int, debug bool) *consumer.PrinterConsumer {

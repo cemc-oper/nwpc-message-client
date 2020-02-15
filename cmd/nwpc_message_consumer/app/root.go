@@ -22,6 +22,7 @@ func (b *commandsBuilder) addCommands(commands ...Command) *commandsBuilder {
 func (b *commandsBuilder) addAll() *commandsBuilder {
 	b.addCommands(
 		newVersionCommand(),
+		newProductionCommand(),
 	)
 	return b
 }
