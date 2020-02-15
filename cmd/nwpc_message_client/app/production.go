@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	flags "github.com/jessevdk/go-flags"
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	"github.com/nwpc-oper/nwpc-message-client/common/sender"
 	log "github.com/sirupsen/logrus"
@@ -20,11 +21,11 @@ type productionCommand struct {
 	BaseCommand
 
 	system         string
+	stream         string
 	productionType string
-	event          string
-	status         string
-	startTime      string
-	forecastTime   string
+
+	event  string
+	status string
 
 	rabbitmqServer string
 	writeTimeout   time.Duration
@@ -36,17 +37,19 @@ type productionCommand struct {
 }
 
 func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error {
-	data := common.OperationProductionData{
-		ProductionInfo: common.ProductionInfo{
-			System: pc.system,
-			Type:   common.ProductionType(pc.productionType),
-		},
-		StartTime:    pc.startTime,
-		ForecastTime: pc.forecastTime,
-		ProductionEventStatus: common.ProductionEventStatus{
-			Event:  common.ProductionEvent(pc.event),
-			Status: common.ToEventStatus(pc.status),
-		},
+	var data interface{}
+	var err error
+	switch common.ProductionStream(pc.stream) {
+	case common.ProductionStreamOperation:
+		data, err = pc.getOperationData(cmd, args)
+		break
+	case common.ProductionStreamEPS:
+	default:
+		err = fmt.Errorf("stream type is not supported: %s", pc.stream)
+	}
+
+	if err != nil {
+		return fmt.Errorf("create production data has error: %s", err)
 	}
 
 	message := common.EventMessage{
@@ -113,15 +116,13 @@ func newProductionCommand() *productionCommand {
 		"system name, such as grapes_gfs_gmf")
 	productionCmd.Flags().StringVar(&pc.productionType, "production-type", "",
 		fmt.Sprintf("production type, such as %s", common.ProductionTypeGrib2))
+	productionCmd.Flags().StringVar(&pc.stream, "production-stream", "",
+		"production stream, such as oper")
+
 	productionCmd.Flags().StringVar(&pc.event, "event", "",
 		fmt.Sprintf("production event, such as %s", common.ProductionEventStorage))
 	productionCmd.Flags().StringVar(&pc.status, "status", string(common.Complete),
 		fmt.Sprintf("event status, such as %s, %s", common.Complete, common.Aborted))
-
-	productionCmd.Flags().StringVar(&pc.startTime, "start-time", "",
-		"start time, YYYYMMDDHH")
-	productionCmd.Flags().StringVar(&pc.forecastTime, "forecast-time", "",
-		"forecast time, FFFh, 0h, 12h, ...")
 
 	productionCmd.Flags().StringVar(&pc.rabbitmqServer, "rabbitmq-server", "",
 		"rabbitmq server, such as amqp://guest:guest@host:port")
@@ -134,9 +135,13 @@ func newProductionCommand() *productionCommand {
 	productionCmd.Flags().BoolVar(&pc.disableSend, "disable-send", false,
 		"disable message deliver, just for debug.")
 
+	productionCmd.Flags().SortFlags = false
+
 	productionCmd.MarkFlagRequired("system")
 	productionCmd.MarkFlagRequired("production-type")
+	productionCmd.MarkFlagRequired("production-stream")
 	productionCmd.MarkFlagRequired("event")
+
 	productionCmd.MarkFlagRequired("start-time")
 	productionCmd.MarkFlagRequired("forecast-time")
 
@@ -144,4 +149,33 @@ func newProductionCommand() *productionCommand {
 
 	pc.cmd = productionCmd
 	return pc
+}
+
+func (pc *productionCommand) getOperationData(
+	cmd *cobra.Command, args []string,
+) (common.OperationProductionData, error) {
+	var opts struct {
+		StartTime    string `long:"start-time" description:"start time, YYYYMMDDHH" required:"true"`
+		ForecastTime string `long:"forecast-time" description:"forecast time, FFFh, 0h, 12h, ..." required:"true"`
+	}
+
+	parser := flags.NewParser(&opts, flags.IgnoreUnknown)
+	_, err := parser.ParseArgs(args)
+	if err != nil {
+		return common.OperationProductionData{}, fmt.Errorf("parse options has error: %v", err)
+	}
+
+	data := common.OperationProductionData{
+		ProductionInfo: common.ProductionInfo{
+			System: pc.system,
+			Type:   common.ProductionType(pc.productionType),
+		},
+		StartTime:    opts.StartTime,
+		ForecastTime: opts.ForecastTime,
+		ProductionEventStatus: common.ProductionEventStatus{
+			Event:  common.ProductionEvent(pc.event),
+			Status: common.ToEventStatus(pc.status),
+		},
+	}
+	return data, nil
 }
