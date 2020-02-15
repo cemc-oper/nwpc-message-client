@@ -2,7 +2,9 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/common"
+	"github.com/nwpc-oper/nwpc-message-client/common/sender"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"time"
@@ -21,6 +23,7 @@ type ecflowClientCommand struct {
 	rabbitmqServer string
 	brokerAddress  string
 	disableSend    bool
+	writeTimeout   time.Duration
 }
 
 func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) error {
@@ -59,11 +62,27 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 		senderType = BrokerSenderType
 	}
 
-	return sendMessage(senderType, ec.rabbitmqServer, exchangeName, routeKeyName, messageBytes)
+	var currentSender sender.Sender
+	switch senderType {
+	case RabbitMQSenderType:
+		currentSender = sender.CreateRabbitMQSender(
+			ec.rabbitmqServer, exchangeName, routeKeyName, ec.writeTimeout)
+		break
+	case BrokerSenderType:
+		currentSender = sender.CreateBrokerSender(
+			ec.brokerAddress, ec.rabbitmqServer, exchangeName, routeKeyName, ec.writeTimeout)
+		break
+	default:
+		return fmt.Errorf("SenderType is not supported: %d", senderType)
+	}
+
+	return sendMessage(currentSender, messageBytes)
 }
 
 func newEcflowClientCommand() *ecflowClientCommand {
-	ec := &ecflowClientCommand{}
+	ec := &ecflowClientCommand{
+		writeTimeout: 2 * time.Second,
+	}
 	ecFlowClientCmd := &cobra.Command{
 		Use:   "ecflow-client",
 		Short: "send messages for ecflow_client command",

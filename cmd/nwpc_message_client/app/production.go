@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/common"
+	"github.com/nwpc-oper/nwpc-message-client/common/sender"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"time"
@@ -27,6 +28,7 @@ type productionCommand struct {
 	brokerAddress  string
 	rabbitmqServer string
 	disableSend    bool
+	writeTimeout   time.Duration
 }
 
 func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error {
@@ -74,11 +76,27 @@ func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error
 		senderType = BrokerSenderType
 	}
 
-	return sendMessage(senderType, rabbitmqServer, exchangeName, routeKeyName, messageBytes)
+	var currentSender sender.Sender
+	switch senderType {
+	case RabbitMQSenderType:
+		currentSender = sender.CreateRabbitMQSender(
+			pc.rabbitmqServer, exchangeName, routeKeyName, pc.writeTimeout)
+		break
+	case BrokerSenderType:
+		currentSender = sender.CreateBrokerSender(
+			pc.brokerAddress, pc.rabbitmqServer, exchangeName, routeKeyName, pc.writeTimeout)
+		break
+	default:
+		return fmt.Errorf("SenderType is not supported: %d", senderType)
+	}
+
+	return sendMessage(currentSender, messageBytes)
 }
 
 func newProductionCommand() *productionCommand {
-	pc := &productionCommand{}
+	pc := &productionCommand{
+		writeTimeout: 2 * time.Second,
+	}
 
 	productionCmd := &cobra.Command{
 		Use:   "production",

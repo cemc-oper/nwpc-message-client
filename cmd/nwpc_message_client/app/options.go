@@ -5,20 +5,7 @@ import (
 )
 
 var (
-	rabbitmqServer = ""
-	disableSend    = false
-
-	commandOptions = ""
-
-	system         = ""
-	productionType = ""
-	event          = ""
-	status         = ""
-	startTime      = ""
-	forecastTime   = ""
-
 	brokerAddress  = ""
-	useBroker      = true
 	disableDeliver = false
 
 	enableProfiling  = false
