@@ -60,3 +60,11 @@ func Execute() {
 type Command interface {
 	getCommand() *cobra.Command
 }
+
+type BaseCommand struct {
+	cmd *cobra.Command
+}
+
+func (c *BaseCommand) getCommand() *cobra.Command {
+	return c.cmd
+}

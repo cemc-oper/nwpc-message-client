@@ -16,7 +16,7 @@ The command run multiply goroutines (like threads, default is 2) to receive mess
 `
 
 type ecflowClientCommand struct {
-	cmd               *cobra.Command
+	BaseCommand
 	rabbitmqServer    string
 	rabbitmqQueueName string
 	elasticServer     string
@@ -24,10 +24,6 @@ type ecflowClientCommand struct {
 	bulkSize          int
 	isDebug           bool
 	consumerType      string
-}
-
-func (c *ecflowClientCommand) getCommand() *cobra.Command {
-	return c.cmd
 }
 
 func (c *ecflowClientCommand) consumerEcflowClient(cmd *cobra.Command, args []string) error {

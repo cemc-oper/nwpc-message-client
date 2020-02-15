@@ -11,7 +11,7 @@ Consume production message from rabbitmq and store them into elasticsearch.
 `
 
 type productionCommand struct {
-	cmd               *cobra.Command
+	BaseCommand
 	rabbitmqServer    string
 	rabbitmqQueueName string
 	elasticServer     string
@@ -19,10 +19,6 @@ type productionCommand struct {
 	bulkSize          int
 	isDebug           bool
 	consumerType      string
-}
-
-func (c *productionCommand) getCommand() *cobra.Command {
-	return c.cmd
 }
 
 func (c *productionCommand) consumeProduction(cmd *cobra.Command, args []string) error {
