@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(brokerCmd)
+	//rootCmd.AddCommand(brokerCmd)
 
 	brokerCmd.Flags().StringVar(&brokerAddress, "address", ":33383",
 		"broker rpc address, use tcp port.")

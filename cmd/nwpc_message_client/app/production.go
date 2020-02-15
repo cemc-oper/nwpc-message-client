@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(productionCmd)
+	//rootCmd.AddCommand(productionCmd)
 
 	productionCmd.Flags().StringVar(&system, "system", "",
 		"system name, such as grapes_gfs_gmf")

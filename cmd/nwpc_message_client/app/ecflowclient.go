@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(ecFlowClientCmd)
+	//rootCmd.AddCommand(ecFlowClientCmd)
 
 	ecFlowClientCmd.Flags().StringVar(&commandOptions, "command-options", "",
 		"ecflow_client command options")

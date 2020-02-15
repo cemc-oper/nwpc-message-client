@@ -5,16 +5,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
+type versionCommand struct {
+	BaseCommand
 }
 
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "print version information",
-	Long:  "Print version information",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Version %s (%s)\n", Version, GitCommit)
-		fmt.Printf("Build at %s\n", BuildTime)
-	},
+func (vc *versionCommand) showVersion(cmd *cobra.Command, args []string) {
+	fmt.Printf("Version %s (%s)\n", Version, GitCommit)
+	fmt.Printf("Build at %s\n", BuildTime)
+}
+
+func newVersionCommand() *versionCommand {
+	vc := &versionCommand{}
+
+	cmd := &cobra.Command{
+		Use:   "version",
+		Short: "print version information",
+		Long:  "Print version information",
+		Run:   vc.showVersion,
+	}
+
+	vc.cmd = cmd
+	return vc
 }
