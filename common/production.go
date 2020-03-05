@@ -6,6 +6,13 @@ const (
 	ProductionEventStorage ProductionEvent = "storage"
 )
 
+type ProductionStream string
+
+const (
+	ProductionStreamOperation ProductionStream = "oper"
+	ProductionStreamEPS       ProductionStream = "eps"
+)
+
 type ProductionType string
 
 const (
@@ -15,17 +22,16 @@ const (
 	ProductionTypeGraph    ProductionType = "graph"
 )
 
-type ProductionStream string
+type ProductionName string
 
 const (
-	ProductionStreamOperation ProductionStream = "oper"
-	ProductionStreamEPS       ProductionStream = "eps"
+	ProductionNameGrib2Orig ProductionName = "orig"
 )
 
 type ProductionInfo struct {
 	System  string           `json:"system"`  // system name: grapes_gfs_gmf, grapes_gfs_gda
-	Type    ProductionType   `json:"type"`    // production type: grib2
 	Stream  ProductionStream `json:"stream"`  // stream: oper, eps, ...
+	Type    ProductionType   `json:"type"`    // production type: grib2
 	Product string           `json:"product"` // production name, orig, ...
 }
 
