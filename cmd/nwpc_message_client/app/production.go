@@ -38,8 +38,60 @@ type productionCommand struct {
 }
 
 func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error {
+	flagSet := pflag.NewFlagSet("oper", pflag.ContinueOnError)
+	flagSet.ParseErrorsWhitelist.UnknownFlags = true
+	flagSet.StringVar(&pc.system, "system", "",
+		"system name, such as grapes_gfs_gmf")
+	flagSet.StringVar(&pc.productionType, "production-type", "",
+		fmt.Sprintf("production type, such as %s", common.ProductionTypeGrib2))
+	flagSet.StringVar(&pc.stream, "production-stream", "",
+		"production stream, such as oper")
+
+	flagSet.StringVar(&pc.event, "event", "",
+		fmt.Sprintf("production event, such as %s", common.ProductionEventStorage))
+	flagSet.StringVar(&pc.status, "status", string(common.Complete),
+		fmt.Sprintf("event status, such as %s, %s", common.Complete, common.Aborted))
+
+	flagSet.StringVar(&pc.rabbitmqServer, "rabbitmq-server", "",
+		"rabbitmq server, such as amqp://guest:guest@host:port")
+
+	flagSet.BoolVar(&pc.useBroker, "with-broker", true,
+		"deliver message using a broker, should set --broker-address when enabled.")
+	flagSet.StringVar(&pc.brokerAddress, "broker-address", "",
+		"broker address, work with --with-broker")
+
+	flagSet.BoolVar(&pc.disableSend, "disable-send", false,
+		"disable message deliver, just for debug.")
+
+	flagSet.SortFlags = false
+	flagSet.ParseErrorsWhitelist = pflag.ParseErrorsWhitelist{UnknownFlags: true}
+
+	flagSet.SetAnnotation("system", RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("production-type", RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("production-stream", RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("event", RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("rabbitmq-server", RequiredOption, []string{"true"})
+
+	err := flagSet.Parse(args)
+	if err != nil {
+		return fmt.Errorf("parse options has error: %s", err)
+	}
+
+	var missingFlagNames []string
+	flagSet.VisitAll(func(flag *pflag.Flag) {
+		requiredAnnotation, found := flag.Annotations[RequiredOption]
+		if !found {
+			return
+		}
+		if (requiredAnnotation[0] == "true") && !flag.Changed {
+			missingFlagNames = append(missingFlagNames, flag.Name)
+		}
+	})
+	if len(missingFlagNames) > 0 {
+		return fmt.Errorf(`required flag(s) "%s" not set`, strings.Join(missingFlagNames, `", "`))
+	}
+
 	var data interface{}
-	var err error
 	switch common.ProductionStream(pc.stream) {
 	case common.ProductionStreamOperation:
 		data, err = pc.getOperationData(cmd, args)
@@ -107,43 +159,12 @@ func newProductionCommand() *productionCommand {
 	}
 
 	productionCmd := &cobra.Command{
-		Use:   "production",
-		Short: "send production messages",
-		Long:  productionDescription,
-		RunE:  pc.runCommand,
+		Use:                "production",
+		Short:              "send production messages",
+		Long:               productionDescription,
+		RunE:               pc.runCommand,
+		DisableFlagParsing: true,
 	}
-
-	productionCmd.Flags().StringVar(&pc.system, "system", "",
-		"system name, such as grapes_gfs_gmf")
-	productionCmd.Flags().StringVar(&pc.productionType, "production-type", "",
-		fmt.Sprintf("production type, such as %s", common.ProductionTypeGrib2))
-	productionCmd.Flags().StringVar(&pc.stream, "production-stream", "",
-		"production stream, such as oper")
-
-	productionCmd.Flags().StringVar(&pc.event, "event", "",
-		fmt.Sprintf("production event, such as %s", common.ProductionEventStorage))
-	productionCmd.Flags().StringVar(&pc.status, "status", string(common.Complete),
-		fmt.Sprintf("event status, such as %s, %s", common.Complete, common.Aborted))
-
-	productionCmd.Flags().StringVar(&pc.rabbitmqServer, "rabbitmq-server", "",
-		"rabbitmq server, such as amqp://guest:guest@host:port")
-
-	productionCmd.Flags().BoolVar(&pc.useBroker, "with-broker", true,
-		"deliver message using a broker, should set --broker-address when enabled.")
-	productionCmd.Flags().StringVar(&pc.brokerAddress, "broker-address", "",
-		"broker address, work with --with-broker")
-
-	productionCmd.Flags().BoolVar(&pc.disableSend, "disable-send", false,
-		"disable message deliver, just for debug.")
-
-	productionCmd.Flags().SortFlags = false
-
-	productionCmd.MarkFlagRequired("system")
-	productionCmd.MarkFlagRequired("production-type")
-	productionCmd.MarkFlagRequired("production-stream")
-	productionCmd.MarkFlagRequired("event")
-
-	productionCmd.MarkFlagRequired("rabbitmq-server")
 
 	pc.cmd = productionCmd
 	return pc
