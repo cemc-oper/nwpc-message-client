@@ -27,6 +27,7 @@ type productionCommand struct {
 	system         string
 	stream         string
 	productionType string
+	productionName string
 
 	event  string
 	status string
@@ -95,6 +96,8 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 		fmt.Sprintf("production type, such as %s", common.ProductionTypeGrib2))
 	flagSet.StringVar(&pc.stream, "production-stream", "",
 		"production stream, such as oper")
+	flagSet.StringVar(&pc.productionName, "production-name", "",
+		"production name, such as orig")
 
 	flagSet.StringVar(&pc.event, "event", "",
 		fmt.Sprintf("production event, such as %s", common.ProductionEventStorage))
@@ -118,6 +121,7 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 	flagSet.SetAnnotation("system", RequiredOption, []string{"true"})
 	flagSet.SetAnnotation("production-type", RequiredOption, []string{"true"})
 	flagSet.SetAnnotation("production-stream", RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("production-name", RequiredOption, []string{"true"})
 	flagSet.SetAnnotation("event", RequiredOption, []string{"true"})
 	flagSet.SetAnnotation("rabbitmq-server", RequiredOption, []string{"true"})
 	return flagSet
@@ -166,8 +170,10 @@ func (pc *productionCommand) getOperationData(
 
 	data := common.OperationProductionData{
 		ProductionInfo: common.ProductionInfo{
-			System: pc.system,
-			Type:   common.ProductionType(pc.productionType),
+			System:  pc.system,
+			Type:    common.ProductionType(pc.productionType),
+			Stream:  common.ProductionStream(pc.stream),
+			Product: pc.productionName,
 		},
 		StartTime:    startTime,
 		ForecastTime: forecastTime,
