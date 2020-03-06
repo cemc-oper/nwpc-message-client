@@ -40,17 +40,25 @@ type ProductionEventStatus struct {
 	Status EventStatus     `json:"status"` // unknown, complete, queued, aborted, submitted, active, suspended
 }
 
-type OperationProductionData struct {
-	ProductionInfo
+type OperationProductionProperties struct {
 	StartTime    string `json:"start_time"`    // start time, YYYYMMDDHH
 	ForecastTime string `json:"forecast_time"` // time duration, such as 3h, 12h, 120h
+}
+
+type OperationProductionData struct {
+	ProductionInfo
+	OperationProductionProperties
 	ProductionEventStatus
+}
+
+type EpsProductionProperties struct {
+	StartTime    string `json:"start_time"`    // start time, YYYYMMDDHH
+	ForecastTime string `json:"forecast_time"` // time duration, such as 3h, 12h, 120h
+	Number       int    `json:"number"`
 }
 
 type EpsProductionData struct {
 	ProductionInfo
-	StartTime    string `json:"start_time"`    // start time, YYYYMMDDHH
-	ForecastTime string `json:"forecast_time"` // time duration, such as 3h, 12h, 120h
-	Number       int    `json:"number"`
+	EpsProductionProperties
 	ProductionEventStatus
 }

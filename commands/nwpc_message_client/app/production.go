@@ -165,8 +165,10 @@ func (pc *productionCommand) getOperationData(
 
 	data := common.OperationProductionData{
 		ProductionInfo: pc.ProductionInfo,
-		StartTime:      startTime,
-		ForecastTime:   forecastTime,
+		OperationProductionProperties: common.OperationProductionProperties{
+			StartTime:    startTime,
+			ForecastTime: forecastTime,
+		},
 		ProductionEventStatus: common.ProductionEventStatus{
 			Event:  common.ProductionEvent(pc.event),
 			Status: common.ToEventStatus(pc.status),
