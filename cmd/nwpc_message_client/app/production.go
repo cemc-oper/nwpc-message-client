@@ -3,16 +3,14 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/nwpc-oper/nwpc-message-client/cmd"
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	"github.com/nwpc-oper/nwpc-message-client/common/sender"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"strings"
 	"time"
 )
-
-const RequiredOption = "REQUIRED_OPTION"
 
 const ProductionMessageType = "production"
 
@@ -77,7 +75,7 @@ func (pc *productionCommand) parseMainOptions(args []string) error {
 		return fmt.Errorf("parse options has error: %s", err)
 	}
 
-	err = checkRequiredFlags(flagSet)
+	err = cmd.CheckRequiredFlags(flagSet)
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
@@ -115,12 +113,12 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 	flagSet.SortFlags = false
 	flagSet.ParseErrorsWhitelist = pflag.ParseErrorsWhitelist{UnknownFlags: true}
 
-	flagSet.SetAnnotation("system", RequiredOption, []string{"true"})
-	flagSet.SetAnnotation("production-type", RequiredOption, []string{"true"})
-	flagSet.SetAnnotation("production-stream", RequiredOption, []string{"true"})
-	flagSet.SetAnnotation("production-name", RequiredOption, []string{"true"})
-	flagSet.SetAnnotation("event", RequiredOption, []string{"true"})
-	flagSet.SetAnnotation("rabbitmq-server", RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("system", cmd.RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("production-type", cmd.RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("production-stream", cmd.RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("production-name", cmd.RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("event", cmd.RequiredOption, []string{"true"})
+	flagSet.SetAnnotation("rabbitmq-server", cmd.RequiredOption, []string{"true"})
 	return flagSet
 }
 
@@ -152,15 +150,15 @@ func (pc *productionCommand) getOperationData(
 		"start time, YYYYMMDDHH")
 	operFlagSet.StringVar(&forecastTime, "forecast-time", "",
 		"forecast time, FFFh, 0h, 12h, ...")
-	operFlagSet.SetAnnotation("start-time", RequiredOption, []string{"true"})
-	operFlagSet.SetAnnotation("forecast-time", RequiredOption, []string{"true"})
+	operFlagSet.SetAnnotation("start-time", cmd.RequiredOption, []string{"true"})
+	operFlagSet.SetAnnotation("forecast-time", cmd.RequiredOption, []string{"true"})
 
 	err := operFlagSet.Parse(args)
 	if err != nil {
 		return common.OperationProductionData{}, fmt.Errorf("parse options has error: %s", err)
 	}
 
-	err = checkRequiredFlags(operFlagSet)
+	err = cmd.CheckRequiredFlags(operFlagSet)
 	if err != nil {
 		return common.OperationProductionData{}, fmt.Errorf("%v", err)
 	}
@@ -224,21 +222,4 @@ func (pc *productionCommand) sendProductionMessage(data interface{}) error {
 	}
 
 	return sendMessage(currentSender, messageBytes)
-}
-
-func checkRequiredFlags(commandFlags *pflag.FlagSet) error {
-	var missingFlagNames []string
-	commandFlags.VisitAll(func(flag *pflag.Flag) {
-		requiredAnnotation, found := flag.Annotations[RequiredOption]
-		if !found {
-			return
-		}
-		if (requiredAnnotation[0] == "true") && !flag.Changed {
-			missingFlagNames = append(missingFlagNames, flag.Name)
-		}
-	})
-	if len(missingFlagNames) > 0 {
-		return fmt.Errorf(`required flag(s) "%s" not set`, strings.Join(missingFlagNames, `", "`))
-	}
-	return nil
 }
