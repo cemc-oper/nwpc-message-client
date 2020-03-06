@@ -24,10 +24,7 @@ Messages are send to a rabbitmq server directly or via a broker running by broke
 type productionCommand struct {
 	BaseCommand
 
-	system         string
-	stream         string
-	productionType string
-	productionName string
+	common.ProductionInfo
 
 	event  string
 	status string
@@ -90,13 +87,13 @@ func (pc *productionCommand) parseMainOptions(args []string) error {
 func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 	flagSet := pflag.NewFlagSet("oper", pflag.ContinueOnError)
 	flagSet.ParseErrorsWhitelist.UnknownFlags = true
-	flagSet.StringVar(&pc.system, "system", "",
+	flagSet.StringVar(&pc.ProductionInfo.System, "system", "",
 		"system name, such as grapes_gfs_gmf")
-	flagSet.StringVar(&pc.productionType, "production-type", "",
+	flagSet.StringVar((*string)(&pc.ProductionInfo.Type), "production-type", "",
 		fmt.Sprintf("production type, such as %s", common.ProductionTypeGrib2))
-	flagSet.StringVar(&pc.stream, "production-stream", "",
+	flagSet.StringVar((*string)(&pc.ProductionInfo.Stream), "production-stream", "",
 		"production stream, such as oper")
-	flagSet.StringVar(&pc.productionName, "production-name", "",
+	flagSet.StringVar(&pc.ProductionInfo.Product, "production-name", "",
 		"production name, such as orig")
 
 	flagSet.StringVar(&pc.event, "event", "",
@@ -130,13 +127,13 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 func (pc *productionCommand) createProductionData(args []string) (interface{}, error) {
 	var data interface{}
 	var err error
-	switch common.ProductionStream(pc.stream) {
+	switch pc.ProductionInfo.Stream {
 	case common.ProductionStreamOperation:
 		data, err = pc.getOperationData(args)
 		break
 	case common.ProductionStreamEPS:
 	default:
-		err = fmt.Errorf("stream type is not supported: %s", pc.stream)
+		err = fmt.Errorf("stream type is not supported: %s", pc.ProductionInfo.Stream)
 	}
 
 	return data, err
@@ -169,14 +166,9 @@ func (pc *productionCommand) getOperationData(
 	}
 
 	data := common.OperationProductionData{
-		ProductionInfo: common.ProductionInfo{
-			System:  pc.system,
-			Type:    common.ProductionType(pc.productionType),
-			Stream:  common.ProductionStream(pc.stream),
-			Product: pc.productionName,
-		},
-		StartTime:    startTime,
-		ForecastTime: forecastTime,
+		ProductionInfo: pc.ProductionInfo,
+		StartTime:      startTime,
+		ForecastTime:   forecastTime,
 		ProductionEventStatus: common.ProductionEventStatus{
 			Event:  common.ProductionEvent(pc.event),
 			Status: common.ToEventStatus(pc.status),
@@ -202,7 +194,7 @@ func (pc *productionCommand) sendProductionMessage(data interface{}) error {
 	fmt.Printf("%s\n", messageBytes)
 
 	exchangeName := "nwpc.operation.production"
-	routeKeyName := fmt.Sprintf("%s.production.%s", pc.system, pc.productionType)
+	routeKeyName := fmt.Sprintf("%s.production.%s", pc.ProductionInfo.System, pc.ProductionInfo.Type)
 
 	if pc.disableSend {
 		log.WithFields(log.Fields{
