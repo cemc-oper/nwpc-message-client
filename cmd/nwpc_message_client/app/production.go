@@ -46,66 +46,13 @@ func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error
 		return fmt.Errorf("%v", err)
 	}
 
-	var data interface{}
-	switch common.ProductionStream(pc.stream) {
-	case common.ProductionStreamOperation:
-		data, err = pc.getOperationData(cmd, args)
-		break
-	case common.ProductionStreamEPS:
-	default:
-		err = fmt.Errorf("stream type is not supported: %s", pc.stream)
-	}
+	data, err := pc.createProductionData(args)
 
 	if err != nil {
 		return fmt.Errorf("create production data has error: %s", err)
 	}
 
-	message := common.EventMessage{
-		App:  appName,
-		Type: ProductionMessageType,
-		Time: time.Now(),
-		Data: data,
-	}
-
-	messageBytes, _ := json.Marshal(message)
-
-	log.WithFields(log.Fields{
-		"component": "production",
-		"event":     "message",
-	}).Infof("%s", messageBytes)
-	fmt.Printf("%s\n", messageBytes)
-
-	exchangeName := "nwpc.operation.production"
-	routeKeyName := fmt.Sprintf("%s.production.%s", pc.system, pc.productionType)
-
-	if pc.disableSend {
-		log.WithFields(log.Fields{
-			"component": "production",
-			"event":     "send",
-		}).Infof("message deliver is disabled by --disable-send option.")
-		return nil
-	}
-
-	senderType := RabbitMQSenderType
-	if pc.useBroker {
-		senderType = BrokerSenderType
-	}
-
-	var currentSender sender.Sender
-	switch senderType {
-	case RabbitMQSenderType:
-		currentSender = sender.CreateRabbitMQSender(
-			pc.rabbitmqServer, exchangeName, routeKeyName, pc.writeTimeout)
-		break
-	case BrokerSenderType:
-		currentSender = sender.CreateBrokerSender(
-			pc.brokerAddress, pc.rabbitmqServer, exchangeName, routeKeyName, pc.writeTimeout)
-		break
-	default:
-		return fmt.Errorf("SenderType is not supported: %d", senderType)
-	}
-
-	return sendMessage(currentSender, messageBytes)
+	return pc.sendProductionMessage(data)
 }
 
 func newProductionCommand() *productionCommand {
@@ -176,8 +123,23 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 	return flagSet
 }
 
+func (pc *productionCommand) createProductionData(args []string) (interface{}, error) {
+	var data interface{}
+	var err error
+	switch common.ProductionStream(pc.stream) {
+	case common.ProductionStreamOperation:
+		data, err = pc.getOperationData(args)
+		break
+	case common.ProductionStreamEPS:
+	default:
+		err = fmt.Errorf("stream type is not supported: %s", pc.stream)
+	}
+
+	return data, err
+}
+
 func (pc *productionCommand) getOperationData(
-	cmd *cobra.Command, args []string,
+	args []string,
 ) (common.OperationProductionData, error) {
 	var startTime string
 	var forecastTime string
@@ -215,6 +177,55 @@ func (pc *productionCommand) getOperationData(
 		},
 	}
 	return data, nil
+}
+
+func (pc *productionCommand) sendProductionMessage(data interface{}) error {
+	message := common.EventMessage{
+		App:  appName,
+		Type: ProductionMessageType,
+		Time: time.Now(),
+		Data: data,
+	}
+
+	messageBytes, _ := json.Marshal(message)
+
+	log.WithFields(log.Fields{
+		"component": "production",
+		"event":     "message",
+	}).Infof("%s", messageBytes)
+	fmt.Printf("%s\n", messageBytes)
+
+	exchangeName := "nwpc.operation.production"
+	routeKeyName := fmt.Sprintf("%s.production.%s", pc.system, pc.productionType)
+
+	if pc.disableSend {
+		log.WithFields(log.Fields{
+			"component": "production",
+			"event":     "send",
+		}).Infof("message deliver is disabled by --disable-send option.")
+		return nil
+	}
+
+	senderType := RabbitMQSenderType
+	if pc.useBroker {
+		senderType = BrokerSenderType
+	}
+
+	var currentSender sender.Sender
+	switch senderType {
+	case RabbitMQSenderType:
+		currentSender = sender.CreateRabbitMQSender(
+			pc.rabbitmqServer, exchangeName, routeKeyName, pc.writeTimeout)
+		break
+	case BrokerSenderType:
+		currentSender = sender.CreateBrokerSender(
+			pc.brokerAddress, pc.rabbitmqServer, exchangeName, routeKeyName, pc.writeTimeout)
+		break
+	default:
+		return fmt.Errorf("SenderType is not supported: %d", senderType)
+	}
+
+	return sendMessage(currentSender, messageBytes)
 }
 
 func checkRequiredFlags(commandFlags *pflag.FlagSet) error {
