@@ -140,41 +140,48 @@ func (pc *productionCommand) createProductionData(args []string) (interface{}, e
 func (pc *productionCommand) getOperationData(
 	args []string,
 ) (common.OperationProductionData, error) {
-	var startTime string
-	var forecastTime string
-
-	operFlagSet := pflag.NewFlagSet("oper", pflag.ContinueOnError)
-	operFlagSet.ParseErrorsWhitelist.UnknownFlags = true
-
-	operFlagSet.StringVar(&startTime, "start-time", "",
-		"start time, YYYYMMDDHH")
-	operFlagSet.StringVar(&forecastTime, "forecast-time", "",
-		"forecast time, FFFh, 0h, 12h, ...")
-	operFlagSet.SetAnnotation("start-time", commands.RequiredOption, []string{"true"})
-	operFlagSet.SetAnnotation("forecast-time", commands.RequiredOption, []string{"true"})
-
-	err := operFlagSet.Parse(args)
+	generator := OperationPropertiesGenerator{}
+	err := generator.parseOptions(args)
 	if err != nil {
-		return common.OperationProductionData{}, fmt.Errorf("parse options has error: %s", err)
-	}
-
-	err = commands.CheckRequiredFlags(operFlagSet)
-	if err != nil {
-		return common.OperationProductionData{}, fmt.Errorf("%v", err)
+		return common.OperationProductionData{}, err
 	}
 
 	data := common.OperationProductionData{
-		ProductionInfo: pc.ProductionInfo,
-		OperationProductionProperties: common.OperationProductionProperties{
-			StartTime:    startTime,
-			ForecastTime: forecastTime,
-		},
+		ProductionInfo:                pc.ProductionInfo,
+		OperationProductionProperties: generator.OperationProductionProperties,
 		ProductionEventStatus: common.ProductionEventStatus{
 			Event:  common.ProductionEvent(pc.event),
 			Status: common.ToEventStatus(pc.status),
 		},
 	}
 	return data, nil
+}
+
+type OperationPropertiesGenerator struct {
+	common.OperationProductionProperties
+}
+
+func (parser *OperationPropertiesGenerator) parseOptions(args []string) error {
+	operFlagSet := pflag.NewFlagSet("oper", pflag.ContinueOnError)
+	operFlagSet.ParseErrorsWhitelist.UnknownFlags = true
+
+	operFlagSet.StringVar(&parser.OperationProductionProperties.StartTime, "start-time", "",
+		"start time, YYYYMMDDHH")
+	operFlagSet.StringVar(&parser.OperationProductionProperties.ForecastTime, "forecast-time", "",
+		"forecast time, FFFh, 0h, 12h, ...")
+	operFlagSet.SetAnnotation("start-time", commands.RequiredOption, []string{"true"})
+	operFlagSet.SetAnnotation("forecast-time", commands.RequiredOption, []string{"true"})
+
+	err := operFlagSet.Parse(args)
+	if err != nil {
+		return fmt.Errorf("parse options has error: %s", err)
+	}
+
+	err = commands.CheckRequiredFlags(operFlagSet)
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+	return nil
 }
 
 func (pc *productionCommand) sendProductionMessage(data interface{}) error {
