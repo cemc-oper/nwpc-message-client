@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/nwpc-oper/nwpc-message-client/cmd/nwpc_message_consumer/app"
+	"github.com/nwpc-oper/nwpc-message-client/commands/nwpc_message_consumer/app"
 	log "github.com/sirupsen/logrus"
 )
 

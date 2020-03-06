@@ -8,7 +8,7 @@ export GIT_COMMIT := $(shell git rev-parse --short HEAD 2> /dev/null || true)
 export BIN_PATH := $(shell pwd)/bin
 
 cmd:
-	$(MAKE) -C cmd
+	$(MAKE) -C commands
 
 test:
 	$(MAKE) -C test
