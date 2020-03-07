@@ -3,10 +3,12 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/nwpc-oper/nwpc-message-client/commands"
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	"github.com/nwpc-oper/nwpc-message-client/common/sender"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"time"
 )
 
@@ -33,9 +35,14 @@ type ecflowClientCommand struct {
 }
 
 func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) error {
+	err := ec.parseCommandMainOptions(args)
+	if err != nil {
+		return err
+	}
+
 	data, err := common.CreateEcflowClientMessage(ec.mainOptions.commandOptions)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	message := common.EventMessage{
@@ -87,33 +94,49 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 	return sendMessage(currentSender, messageBytes)
 }
 
+func (ec *ecflowClientCommand) parseCommandMainOptions(args []string) error {
+	ecflowFlagSet := pflag.NewFlagSet("ecflowclient", pflag.ContinueOnError)
+	ecflowFlagSet.StringVar(&ec.mainOptions.commandOptions, "command-options", "",
+		"ecflow_client command options")
+
+	ecflowFlagSet.StringVar(&ec.rabbitmqServer, "rabbitmq-server", "",
+		"rabbitmq server, such as amqp://guest:guest@host:port")
+
+	ecflowFlagSet.BoolVar(&ec.useBroker, "with-broker", true,
+		"deliver message using a broker, should set --broker-address when enabled.")
+	ecflowFlagSet.StringVar(&ec.brokerAddress, "broker-address", "",
+		"broker address, work with --with-broker")
+
+	ecflowFlagSet.BoolVar(&ec.disableSend, "disable-send", false,
+		"disable message deliver, just for debug.")
+
+	ecflowFlagSet.SetAnnotation("command-options", commands.RequiredOption, []string{"true"})
+	ecflowFlagSet.SetAnnotation("rabbitmq-server", commands.RequiredOption, []string{"true"})
+
+	err := ecflowFlagSet.Parse(args)
+	if err != nil {
+		return fmt.Errorf("parse options has error: %s", err)
+	}
+
+	err = commands.CheckRequiredFlags(ecflowFlagSet)
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+
+	return nil
+}
+
 func newEcflowClientCommand() *ecflowClientCommand {
 	ec := &ecflowClientCommand{
 		writeTimeout: 2 * time.Second,
 	}
 	ecFlowClientCmd := &cobra.Command{
-		Use:   "ecflow-client",
-		Short: "send messages for ecflow_client command",
-		Long:  ecflowClientDescription,
-		RunE:  ec.runCommand,
+		Use:                "ecflow-client",
+		Short:              "send messages for ecflow_client command",
+		Long:               ecflowClientDescription,
+		RunE:               ec.runCommand,
+		DisableFlagParsing: true,
 	}
-
-	ecFlowClientCmd.Flags().StringVar(&ec.mainOptions.commandOptions, "command-options", "",
-		"ecflow_client command options")
-
-	ecFlowClientCmd.Flags().StringVar(&ec.rabbitmqServer, "rabbitmq-server", "",
-		"rabbitmq server, such as amqp://guest:guest@host:port")
-
-	ecFlowClientCmd.Flags().BoolVar(&ec.useBroker, "with-broker", true,
-		"deliver message using a broker, should set --broker-address when enabled.")
-	ecFlowClientCmd.Flags().StringVar(&ec.brokerAddress, "broker-address", "",
-		"broker address, work with --with-broker")
-
-	ecFlowClientCmd.Flags().BoolVar(&ec.disableSend, "disable-send", false,
-		"disable message deliver, just for debug.")
-
-	ecFlowClientCmd.MarkFlagRequired("command-options")
-	ecFlowClientCmd.MarkFlagRequired("rabbitmq-server")
 
 	ec.cmd = ecFlowClientCmd
 	return ec
