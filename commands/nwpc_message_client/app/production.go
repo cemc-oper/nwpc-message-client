@@ -36,17 +36,16 @@ type productionCommand struct {
 		status string
 	}
 
-	rabbitmqServer string
-	writeTimeout   time.Duration
-
-	useBroker     bool
-	brokerAddress string
-
-	disableSend bool
+	targetOptions
 }
 
 func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error {
 	err := pc.parseMainOptions(args)
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+
+	err = pc.targetOptions.parseCommandTargetOptions(args)
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
@@ -62,7 +61,9 @@ func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error
 
 func newProductionCommand() *productionCommand {
 	pc := &productionCommand{
-		writeTimeout: 2 * time.Second,
+		targetOptions: targetOptions{
+			writeTimeout: 2 * time.Second,
+		},
 	}
 
 	productionCmd := &cobra.Command{
@@ -112,17 +113,6 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 	flagSet.StringVar(&pc.mainOptions.status, "status", string(common.Complete),
 		fmt.Sprintf("event status, such as %s, %s", common.Complete, common.Aborted))
 
-	flagSet.StringVar(&pc.rabbitmqServer, "rabbitmq-server", "",
-		"rabbitmq server, such as amqp://guest:guest@host:port")
-
-	flagSet.BoolVar(&pc.useBroker, "with-broker", true,
-		"deliver message using a broker, should set --broker-address when enabled.")
-	flagSet.StringVar(&pc.brokerAddress, "broker-address", "",
-		"broker address, work with --with-broker")
-
-	flagSet.BoolVar(&pc.disableSend, "disable-send", false,
-		"disable message deliver, just for debug.")
-
 	flagSet.SortFlags = false
 	flagSet.ParseErrorsWhitelist = pflag.ParseErrorsWhitelist{UnknownFlags: true}
 
@@ -131,7 +121,6 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 	flagSet.SetAnnotation("production-stream", commands.RequiredOption, []string{"true"})
 	flagSet.SetAnnotation("production-name", commands.RequiredOption, []string{"true"})
 	flagSet.SetAnnotation("event", commands.RequiredOption, []string{"true"})
-	flagSet.SetAnnotation("rabbitmq-server", commands.RequiredOption, []string{"true"})
 	return flagSet
 }
 

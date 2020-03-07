@@ -25,17 +25,16 @@ type ecflowClientCommand struct {
 		commandOptions string
 	}
 
-	rabbitmqServer string
-	writeTimeout   time.Duration
-
-	useBroker     bool
-	brokerAddress string
-
-	disableSend bool
+	targetOptions
 }
 
 func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) error {
 	err := ec.parseCommandMainOptions(args)
+	if err != nil {
+		return err
+	}
+
+	err = ec.targetOptions.parseCommandTargetOptions(args)
 	if err != nil {
 		return err
 	}
@@ -62,7 +61,7 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 	exchangeName := "nwpc.operation.workflow"
 	routeKeyName := "ecflow.command.ecflow_client"
 
-	if ec.disableSend {
+	if ec.targetOptions.disableSend {
 		log.WithFields(log.Fields{
 			"component": "ecflow-client",
 			"event":     "send",
@@ -73,7 +72,7 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 	}
 
 	senderType := RabbitMQSenderType
-	if ec.useBroker {
+	if ec.targetOptions.useBroker {
 		senderType = BrokerSenderType
 	}
 
@@ -81,11 +80,15 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 	switch senderType {
 	case RabbitMQSenderType:
 		currentSender = sender.CreateRabbitMQSender(
-			ec.rabbitmqServer, exchangeName, routeKeyName, ec.writeTimeout)
+			ec.targetOptions.rabbitmqServer, exchangeName, routeKeyName, ec.targetOptions.writeTimeout)
 		break
 	case BrokerSenderType:
 		currentSender = sender.CreateBrokerSender(
-			ec.brokerAddress, ec.rabbitmqServer, exchangeName, routeKeyName, ec.writeTimeout)
+			ec.targetOptions.brokerAddress,
+			ec.targetOptions.rabbitmqServer,
+			exchangeName,
+			routeKeyName,
+			ec.targetOptions.writeTimeout)
 		break
 	default:
 		return fmt.Errorf("SenderType is not supported: %d", senderType)
@@ -95,30 +98,18 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 }
 
 func (ec *ecflowClientCommand) parseCommandMainOptions(args []string) error {
-	ecflowFlagSet := pflag.NewFlagSet("ecflowclient", pflag.ContinueOnError)
-	ecflowFlagSet.StringVar(&ec.mainOptions.commandOptions, "command-options", "",
+	mainFlagSet := pflag.NewFlagSet("mainFlagSet", pflag.ContinueOnError)
+	mainFlagSet.StringVar(&ec.mainOptions.commandOptions, "command-options", "",
 		"ecflow_client command options")
 
-	ecflowFlagSet.StringVar(&ec.rabbitmqServer, "rabbitmq-server", "",
-		"rabbitmq server, such as amqp://guest:guest@host:port")
+	mainFlagSet.SetAnnotation("command-options", commands.RequiredOption, []string{"true"})
 
-	ecflowFlagSet.BoolVar(&ec.useBroker, "with-broker", true,
-		"deliver message using a broker, should set --broker-address when enabled.")
-	ecflowFlagSet.StringVar(&ec.brokerAddress, "broker-address", "",
-		"broker address, work with --with-broker")
-
-	ecflowFlagSet.BoolVar(&ec.disableSend, "disable-send", false,
-		"disable message deliver, just for debug.")
-
-	ecflowFlagSet.SetAnnotation("command-options", commands.RequiredOption, []string{"true"})
-	ecflowFlagSet.SetAnnotation("rabbitmq-server", commands.RequiredOption, []string{"true"})
-
-	err := ecflowFlagSet.Parse(args)
+	err := mainFlagSet.Parse(args)
 	if err != nil {
 		return fmt.Errorf("parse options has error: %s", err)
 	}
 
-	err = commands.CheckRequiredFlags(ecflowFlagSet)
+	err = commands.CheckRequiredFlags(mainFlagSet)
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
@@ -128,7 +119,10 @@ func (ec *ecflowClientCommand) parseCommandMainOptions(args []string) error {
 
 func newEcflowClientCommand() *ecflowClientCommand {
 	ec := &ecflowClientCommand{
-		writeTimeout: 2 * time.Second,
+		targetOptions: targetOptions{
+			writeTimeout: 2 * time.Second,
+			useBroker:    true,
+		},
 	}
 	ecFlowClientCmd := &cobra.Command{
 		Use:                "ecflow-client",
