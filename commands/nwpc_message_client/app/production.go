@@ -90,21 +90,9 @@ func (pc *productionCommand) parseMainOptions(args []string) error {
 	}
 
 	pc.fillProductionInfo()
-
-	pc.ProductionEventStatus.Event = common.ProductionEvent(pc.mainOptions.event)
-	status, _ := strconv.Atoi(pc.mainOptions.status)
-	pc.ProductionEventStatus.Status = common.EventStatus(status)
+	pc.fillProductionEventStatus()
 
 	return nil
-}
-
-func (pc *productionCommand) fillProductionInfo() {
-	pc.ProductionInfo = common.ProductionInfo{
-		System:  pc.mainOptions.system,
-		Stream:  common.ProductionStream(pc.mainOptions.stream),
-		Type:    common.ProductionType(pc.mainOptions.productionType),
-		Product: common.ProductionName(pc.mainOptions.product),
-	}
 }
 
 func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
@@ -147,6 +135,23 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 	return flagSet
 }
 
+func (pc *productionCommand) fillProductionInfo() {
+	pc.ProductionInfo = common.ProductionInfo{
+		System:  pc.mainOptions.system,
+		Stream:  common.ProductionStream(pc.mainOptions.stream),
+		Type:    common.ProductionType(pc.mainOptions.productionType),
+		Product: common.ProductionName(pc.mainOptions.product),
+	}
+}
+
+func (pc *productionCommand) fillProductionEventStatus() {
+	status, _ := strconv.Atoi(pc.mainOptions.status)
+	pc.ProductionEventStatus = common.ProductionEventStatus{
+		Event:  common.ProductionEvent(pc.mainOptions.event),
+		Status: common.EventStatus(status),
+	}
+}
+
 func (pc *productionCommand) createProductionData(args []string) (interface{}, error) {
 	var data interface{}
 	var err error
@@ -181,15 +186,19 @@ func (pc *productionCommand) getOperationData(
 
 type OperationPropertiesGenerator struct {
 	common.OperationProductionProperties
+	options struct {
+		startTime    string
+		forecastTime string
+	}
 }
 
 func (parser *OperationPropertiesGenerator) parseOptions(args []string) error {
 	operFlagSet := pflag.NewFlagSet("oper", pflag.ContinueOnError)
 	operFlagSet.ParseErrorsWhitelist.UnknownFlags = true
 
-	operFlagSet.StringVar(&parser.OperationProductionProperties.StartTime, "start-time", "",
+	operFlagSet.StringVar(&parser.options.startTime, "start-time", "",
 		"start time, YYYYMMDDHH")
-	operFlagSet.StringVar(&parser.OperationProductionProperties.ForecastTime, "forecast-time", "",
+	operFlagSet.StringVar(&parser.options.forecastTime, "forecast-time", "",
 		"forecast time, FFFh, 0h, 12h, ...")
 	operFlagSet.SetAnnotation("start-time", commands.RequiredOption, []string{"true"})
 	operFlagSet.SetAnnotation("forecast-time", commands.RequiredOption, []string{"true"})
@@ -203,6 +212,12 @@ func (parser *OperationPropertiesGenerator) parseOptions(args []string) error {
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
+
+	parser.OperationProductionProperties = common.OperationProductionProperties{
+		StartTime:    parser.options.startTime,
+		ForecastTime: parser.options.forecastTime,
+	}
+
 	return nil
 }
 
