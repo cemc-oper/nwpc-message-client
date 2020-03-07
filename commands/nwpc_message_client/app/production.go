@@ -245,6 +245,8 @@ func (pc *productionCommand) sendProductionMessage(data interface{}) error {
 			"component": "production",
 			"event":     "send",
 		}).Infof("message deliver is disabled by --disable-send option.")
+		messageBytes, _ := json.MarshalIndent(message, "", "  ")
+		fmt.Printf("%s\n", messageBytes)
 		return nil
 	}
 

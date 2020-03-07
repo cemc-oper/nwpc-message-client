@@ -19,7 +19,9 @@ Messages are send to a rabbitmq server directly or via a broker running by nwpc_
 type ecflowClientCommand struct {
 	BaseCommand
 
-	commandOptions string
+	mainOptions struct {
+		commandOptions string
+	}
 
 	rabbitmqServer string
 	writeTimeout   time.Duration
@@ -31,7 +33,7 @@ type ecflowClientCommand struct {
 }
 
 func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) error {
-	data, err := common.CreateEcflowClientMessage(ec.commandOptions)
+	data, err := common.CreateEcflowClientMessage(ec.mainOptions.commandOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,6 +60,8 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 			"component": "ecflow-client",
 			"event":     "send",
 		}).Infof("message deliver is disabled by --disable-send option.")
+		messageBytes, _ := json.MarshalIndent(message, "", "  ")
+		fmt.Printf("%s\n", messageBytes)
 		return nil
 	}
 
@@ -94,7 +98,7 @@ func newEcflowClientCommand() *ecflowClientCommand {
 		RunE:  ec.runCommand,
 	}
 
-	ecFlowClientCmd.Flags().StringVar(&ec.commandOptions, "command-options", "",
+	ecFlowClientCmd.Flags().StringVar(&ec.mainOptions.commandOptions, "command-options", "",
 		"ecflow_client command options")
 
 	ecFlowClientCmd.Flags().StringVar(&ec.rabbitmqServer, "rabbitmq-server", "",
