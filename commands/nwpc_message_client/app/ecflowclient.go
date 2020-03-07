@@ -1,12 +1,9 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/commands"
 	"github.com/nwpc-oper/nwpc-message-client/common"
-	"github.com/nwpc-oper/nwpc-message-client/common/sender"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"time"
@@ -51,54 +48,12 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 		Data: data,
 	}
 
-	messageBytes, _ := json.Marshal(message)
-
-	log.WithFields(log.Fields{
-		"component": "ecflow-client",
-		"event":     "message",
-	}).Infof("%s", messageBytes)
-
-	exchangeName := "nwpc.operation.workflow"
-	routeKeyName := "ecflow.command.ecflow_client"
-
-	if ec.targetOptions.disableSend {
-		log.WithFields(log.Fields{
-			"component": "ecflow-client",
-			"event":     "send",
-		}).Infof("message deliver is disabled by --disable-send option.")
-		messageBytes, _ := json.MarshalIndent(message, "", "  ")
-		fmt.Printf("%s\n", messageBytes)
-		return nil
-	}
-
-	senderType := RabbitMQSenderType
-	if ec.targetOptions.useBroker {
-		senderType = BrokerSenderType
-	}
-
-	var currentSender sender.Sender
-	switch senderType {
-	case RabbitMQSenderType:
-		currentSender = sender.CreateRabbitMQSender(
-			ec.targetOptions.rabbitmqServer, exchangeName, routeKeyName, ec.targetOptions.writeTimeout)
-		break
-	case BrokerSenderType:
-		currentSender = sender.CreateBrokerSender(
-			ec.targetOptions.brokerAddress,
-			ec.targetOptions.rabbitmqServer,
-			exchangeName,
-			routeKeyName,
-			ec.targetOptions.writeTimeout)
-		break
-	default:
-		return fmt.Errorf("SenderType is not supported: %d", senderType)
-	}
-
-	return sendMessage(currentSender, messageBytes)
+	return sendToTarget(ec.targetOptions, message)
 }
 
 func (ec *ecflowClientCommand) parseCommandMainOptions(args []string) error {
 	mainFlagSet := pflag.NewFlagSet("mainFlagSet", pflag.ContinueOnError)
+	mainFlagSet.ParseErrorsWhitelist.UnknownFlags = true
 	mainFlagSet.StringVar(&ec.mainOptions.commandOptions, "command-options", "",
 		"ecflow_client command options")
 
@@ -122,6 +77,8 @@ func newEcflowClientCommand() *ecflowClientCommand {
 		targetOptions: targetOptions{
 			writeTimeout: 2 * time.Second,
 			useBroker:    true,
+			exchangeName: "nwpc.operation.workflow",
+			routeKeyName: "ecflow.command.ecflow_client",
 		},
 	}
 	ecFlowClientCmd := &cobra.Command{

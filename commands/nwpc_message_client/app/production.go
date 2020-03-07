@@ -1,12 +1,9 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/commands"
 	"github.com/nwpc-oper/nwpc-message-client/common"
-	"github.com/nwpc-oper/nwpc-message-client/common/sender"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"strconv"
@@ -63,6 +60,7 @@ func newProductionCommand() *productionCommand {
 	pc := &productionCommand{
 		targetOptions: targetOptions{
 			writeTimeout: 2 * time.Second,
+			exchangeName: "nwpc.operation.production",
 		},
 	}
 
@@ -218,45 +216,8 @@ func (pc *productionCommand) sendProductionMessage(data interface{}) error {
 		Data: data,
 	}
 
-	messageBytes, _ := json.Marshal(message)
+	pc.targetOptions.routeKeyName = fmt.Sprintf(
+		"%s.production.%s", pc.ProductionInfo.System, pc.ProductionInfo.Type)
 
-	log.WithFields(log.Fields{
-		"component": "production",
-		"event":     "message",
-	}).Infof("%s", messageBytes)
-	fmt.Printf("%s\n", messageBytes)
-
-	exchangeName := "nwpc.operation.production"
-	routeKeyName := fmt.Sprintf("%s.production.%s", pc.ProductionInfo.System, pc.ProductionInfo.Type)
-
-	if pc.disableSend {
-		log.WithFields(log.Fields{
-			"component": "production",
-			"event":     "send",
-		}).Infof("message deliver is disabled by --disable-send option.")
-		messageBytes, _ := json.MarshalIndent(message, "", "  ")
-		fmt.Printf("%s\n", messageBytes)
-		return nil
-	}
-
-	senderType := RabbitMQSenderType
-	if pc.useBroker {
-		senderType = BrokerSenderType
-	}
-
-	var currentSender sender.Sender
-	switch senderType {
-	case RabbitMQSenderType:
-		currentSender = sender.CreateRabbitMQSender(
-			pc.rabbitmqServer, exchangeName, routeKeyName, pc.writeTimeout)
-		break
-	case BrokerSenderType:
-		currentSender = sender.CreateBrokerSender(
-			pc.brokerAddress, pc.rabbitmqServer, exchangeName, routeKeyName, pc.writeTimeout)
-		break
-	default:
-		return fmt.Errorf("SenderType is not supported: %d", senderType)
-	}
-
-	return sendMessage(currentSender, messageBytes)
+	return sendToTarget(pc.targetOptions, message)
 }
