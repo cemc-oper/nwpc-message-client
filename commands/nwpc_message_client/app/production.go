@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"strconv"
 	"time"
 )
 
@@ -25,8 +26,15 @@ type productionCommand struct {
 	common.ProductionInfo
 	common.ProductionEventStatus
 
-	event  string
-	status string
+	mainOptions struct {
+		system         string
+		stream         string
+		productionType string
+		product        string
+
+		event  string
+		status string
+	}
 
 	rabbitmqServer string
 	writeTimeout   time.Duration
@@ -81,27 +89,39 @@ func (pc *productionCommand) parseMainOptions(args []string) error {
 		return fmt.Errorf("%v", err)
 	}
 
-	pc.ProductionEventStatus.Event = (common.ProductionEvent)(pc.event)
-	pc.ProductionEventStatus.Status = pc.Status
+	pc.fillProductionInfo()
+
+	pc.ProductionEventStatus.Event = common.ProductionEvent(pc.mainOptions.event)
+	status, _ := strconv.Atoi(pc.mainOptions.status)
+	pc.ProductionEventStatus.Status = common.EventStatus(status)
 
 	return nil
+}
+
+func (pc *productionCommand) fillProductionInfo() {
+	pc.ProductionInfo = common.ProductionInfo{
+		System:  pc.mainOptions.system,
+		Stream:  common.ProductionStream(pc.mainOptions.stream),
+		Type:    common.ProductionType(pc.mainOptions.productionType),
+		Product: common.ProductionName(pc.mainOptions.product),
+	}
 }
 
 func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 	flagSet := pflag.NewFlagSet("oper", pflag.ContinueOnError)
 	flagSet.ParseErrorsWhitelist.UnknownFlags = true
-	flagSet.StringVar(&pc.ProductionInfo.System, "system", "",
+	flagSet.StringVar(&pc.mainOptions.system, "system", "",
 		"system name, such as grapes_gfs_gmf")
-	flagSet.StringVar((*string)(&pc.ProductionInfo.Type), "production-type", "",
+	flagSet.StringVar((*string)(&pc.mainOptions.productionType), "production-type", "",
 		fmt.Sprintf("production type, such as %s", common.ProductionTypeGrib2))
-	flagSet.StringVar((*string)(&pc.ProductionInfo.Stream), "production-stream", "",
+	flagSet.StringVar((*string)(&pc.mainOptions.stream), "production-stream", "",
 		"production stream, such as oper")
-	flagSet.StringVar(&pc.ProductionInfo.Product, "production-name", "",
+	flagSet.StringVar(&pc.mainOptions.product, "production-name", "",
 		"production name, such as orig")
 
-	flagSet.StringVar(&pc.event, "event", "",
+	flagSet.StringVar(&pc.mainOptions.event, "event", "",
 		fmt.Sprintf("production event, such as %s", common.ProductionEventStorage))
-	flagSet.StringVar(&pc.status, "status", string(common.Complete),
+	flagSet.StringVar(&pc.mainOptions.status, "status", string(common.Complete),
 		fmt.Sprintf("event status, such as %s, %s", common.Complete, common.Aborted))
 
 	flagSet.StringVar(&pc.rabbitmqServer, "rabbitmq-server", "",
