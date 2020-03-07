@@ -5,6 +5,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	Version   = "Unknown version"
+	BuildTime = "Unknown build time"
+	GitCommit = "Unknown GitCommit"
+)
+
 type versionCommand struct {
 	BaseCommand
 }
