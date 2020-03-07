@@ -39,12 +39,12 @@ type productionCommand struct {
 func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error {
 	err := pc.parseMainOptions(args)
 	if err != nil {
-		return fmt.Errorf("%v", err)
+		return fmt.Errorf("parse main options has error: %v", err)
 	}
 
 	err = pc.targetOptions.parseCommandTargetOptions(args)
 	if err != nil {
-		return fmt.Errorf("%v", err)
+		return fmt.Errorf("parser target options has error: %v", err)
 	}
 
 	data, err := pc.createProductionData(args)
@@ -85,7 +85,7 @@ func (pc *productionCommand) parseMainOptions(args []string) error {
 
 	err = commands.CheckRequiredFlags(flagSet)
 	if err != nil {
-		return fmt.Errorf("%v", err)
+		return fmt.Errorf("check required flags has error: %v", err)
 	}
 
 	pc.fillProductionInfo()

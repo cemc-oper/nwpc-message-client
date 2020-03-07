@@ -28,12 +28,12 @@ type ecflowClientCommand struct {
 func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) error {
 	err := ec.parseCommandMainOptions(args)
 	if err != nil {
-		return err
+		return fmt.Errorf("parse main options has eror: %v", err)
 	}
 
 	err = ec.targetOptions.parseCommandTargetOptions(args)
 	if err != nil {
-		return err
+		return fmt.Errorf("parse target options has eror: %v", err)
 	}
 
 	data, err := common.CreateEcflowClientMessage(ec.mainOptions.commandOptions)
