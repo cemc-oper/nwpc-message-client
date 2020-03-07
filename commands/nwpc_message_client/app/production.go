@@ -23,6 +23,7 @@ type productionCommand struct {
 	BaseCommand
 
 	common.ProductionInfo
+	common.ProductionEventStatus
 
 	event  string
 	status string
@@ -79,6 +80,10 @@ func (pc *productionCommand) parseMainOptions(args []string) error {
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
+
+	pc.ProductionEventStatus.Event = (common.ProductionEvent)(pc.event)
+	pc.ProductionEventStatus.Status = pc.Status
+
 	return nil
 }
 
@@ -149,10 +154,7 @@ func (pc *productionCommand) getOperationData(
 	data := common.OperationProductionData{
 		ProductionInfo:                pc.ProductionInfo,
 		OperationProductionProperties: generator.OperationProductionProperties,
-		ProductionEventStatus: common.ProductionEventStatus{
-			Event:  common.ProductionEvent(pc.event),
-			Status: common.ToEventStatus(pc.status),
-		},
+		ProductionEventStatus:         pc.ProductionEventStatus,
 	}
 	return data, nil
 }
