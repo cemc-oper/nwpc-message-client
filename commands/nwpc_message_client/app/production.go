@@ -27,7 +27,7 @@ type productionCommand struct {
 		system         string
 		stream         string
 		productionType string
-		product        string
+		productionName string
 
 		event  string
 		status string
@@ -95,7 +95,7 @@ func (pc *productionCommand) parseMainOptions(args []string) error {
 }
 
 func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
-	flagSet := pflag.NewFlagSet("oper", pflag.ContinueOnError)
+	flagSet := pflag.NewFlagSet("main", pflag.ContinueOnError)
 	flagSet.ParseErrorsWhitelist.UnknownFlags = true
 	flagSet.StringVar(&pc.mainOptions.system, "system", "",
 		"system name, such as grapes_gfs_gmf")
@@ -103,7 +103,7 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 		fmt.Sprintf("production type, such as %s", common.ProductionTypeGrib2))
 	flagSet.StringVar((*string)(&pc.mainOptions.stream), "production-stream", "",
 		"production stream, such as oper")
-	flagSet.StringVar(&pc.mainOptions.product, "production-name", "",
+	flagSet.StringVar(&pc.mainOptions.productionName, "production-name", "",
 		"production name, such as orig")
 
 	flagSet.StringVar(&pc.mainOptions.event, "event", "",
@@ -124,10 +124,10 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 
 func (pc *productionCommand) fillProductionInfo() {
 	pc.ProductionInfo = common.ProductionInfo{
-		System:  pc.mainOptions.system,
-		Stream:  common.ProductionStream(pc.mainOptions.stream),
-		Type:    common.ProductionType(pc.mainOptions.productionType),
-		Product: common.ProductionName(pc.mainOptions.product),
+		System: pc.mainOptions.system,
+		Stream: common.ProductionStream(pc.mainOptions.stream),
+		Type:   common.ProductionType(pc.mainOptions.productionType),
+		Name:   common.ProductionName(pc.mainOptions.productionName),
 	}
 }
 
@@ -180,7 +180,7 @@ type OperationPropertiesGenerator struct {
 }
 
 func (parser *OperationPropertiesGenerator) parseOptions(args []string) error {
-	operFlagSet := pflag.NewFlagSet("oper", pflag.ContinueOnError)
+	operFlagSet := pflag.NewFlagSet("operation", pflag.ContinueOnError)
 	operFlagSet.ParseErrorsWhitelist.UnknownFlags = true
 
 	operFlagSet.StringVar(&parser.options.startTime, "start-time", "",

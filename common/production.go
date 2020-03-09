@@ -29,10 +29,10 @@ const (
 )
 
 type ProductionInfo struct {
-	System  string           `json:"system"`  // system name: grapes_gfs_gmf, grapes_gfs_gda
-	Stream  ProductionStream `json:"stream"`  // stream: oper, eps, ...
-	Type    ProductionType   `json:"type"`    // production type: grib2
-	Product ProductionName   `json:"product"` // production name, orig, ...
+	System string           `json:"system"` // system name: grapes_gfs_gmf, grapes_gfs_gda
+	Stream ProductionStream `json:"stream"` // stream: oper, eps, ...
+	Type   ProductionType   `json:"type"`   // production type: grib2
+	Name   ProductionName   `json:"name"`   // production name, orig, ...
 }
 
 type ProductionEventStatus struct {
