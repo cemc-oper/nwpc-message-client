@@ -200,8 +200,12 @@ func (parser *OperationPropertiesGenerator) parseOptions(args []string) error {
 		return fmt.Errorf("%v", err)
 	}
 
+	startTime, err := time.Parse("2006010215", parser.options.startTime)
+	if err != nil {
+		return fmt.Errorf("parse start time %s has error: %v", parser.options.startTime, err)
+	}
 	parser.OperationProductionProperties = common.OperationProductionProperties{
-		StartTime:    parser.options.startTime,
+		StartTime:    startTime,
 		ForecastTime: parser.options.forecastTime,
 	}
 

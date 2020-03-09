@@ -1,5 +1,7 @@
 package common
 
+import "time"
+
 type ProductionEvent string
 
 const (
@@ -41,8 +43,8 @@ type ProductionEventStatus struct {
 }
 
 type OperationProductionProperties struct {
-	StartTime    string `json:"start_time"`    // start time, YYYYMMDDHH
-	ForecastTime string `json:"forecast_time"` // time duration, such as 3h, 12h, 120h
+	StartTime    time.Time `json:"start_time"`    // start time, YYYYMMDDHH
+	ForecastTime string    `json:"forecast_time"` // time duration, such as 3h, 12h, 120h
 }
 
 type OperationProductionData struct {
@@ -52,9 +54,9 @@ type OperationProductionData struct {
 }
 
 type EpsProductionProperties struct {
-	StartTime    string `json:"start_time"`    // start time, YYYYMMDDHH
-	ForecastTime string `json:"forecast_time"` // time duration, such as 3h, 12h, 120h
-	Number       int    `json:"number"`
+	StartTime    time.Time `json:"start_time"`    // start time, YYYYMMDDHH
+	ForecastTime string    `json:"forecast_time"` // time duration, such as 3h, 12h, 120h
+	Number       int       `json:"number"`
 }
 
 type EpsProductionData struct {
