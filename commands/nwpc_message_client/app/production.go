@@ -78,6 +78,7 @@ func newProductionCommand() *productionCommand {
 		RunE:               pc.runCommand,
 		DisableFlagParsing: true,
 	}
+	productionCmd.SetUsageFunc(pc.printUsage)
 
 	pc.cmd = productionCmd
 	return pc
@@ -264,4 +265,9 @@ Operation Production
 	operFlags := operGenerator.generateFlags()
 	fmt.Fprintf(os.Stderr, "\tFlags:\n")
 	operFlags.PrintDefaults()
+}
+
+func (pc *productionCommand) printUsage(cmd *cobra.Command) error {
+	pc.printHelp()
+	return nil
 }
