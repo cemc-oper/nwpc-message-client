@@ -49,6 +49,7 @@ type ecflowClientCommand struct {
 
 	mainOptions struct {
 		commandOptions string
+		help           bool
 	}
 
 	targetOptions
@@ -58,6 +59,10 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 	err := ec.parseMainOptions(args)
 	if err != nil {
 		return fmt.Errorf("parse main options has eror: %v", err)
+	}
+	if ec.mainOptions.help {
+		ec.printHelp()
+		return nil
 	}
 
 	err = ec.targetOptions.parseCommandTargetOptions(args)
@@ -89,6 +94,7 @@ func (ec *ecflowClientCommand) generateMainFlags() *pflag.FlagSet {
 			"--host=login_a06 --port=33083 "+
 			"--alter add variable ECF_RID 16934800 "+
 			"/gmf_grapes_gfs_post/00/togrib2/togrib2_gfs/045/ne_grib2_045")
+	mainFlagSet.BoolVar(&ec.mainOptions.help, "help", false, "print usage")
 
 	mainFlagSet.SetAnnotation("command-options", commands.RequiredOption, []string{"true"})
 
@@ -100,6 +106,9 @@ func (ec *ecflowClientCommand) parseMainOptions(args []string) error {
 	err := mainFlagSet.Parse(args)
 	if err != nil {
 		return fmt.Errorf("parse options has error: %s", err)
+	}
+	if ec.mainOptions.help {
+		return nil
 	}
 
 	err = commands.CheckRequiredFlags(mainFlagSet)
