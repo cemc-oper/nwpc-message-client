@@ -18,6 +18,33 @@ Send messages for production.
 Messages are send to a rabbitmq server directly or via a broker running by broker command.
 `
 
+func newProductionCommand() *productionCommand {
+	pc := &productionCommand{
+		targetOptions: targetOptions{
+			writeTimeout: 2 * time.Second,
+			exchangeName: "nwpc.operation.production",
+		},
+	}
+
+	productionCmd := &cobra.Command{
+		Use:                "production",
+		Short:              "send production messages",
+		Long:               ecflowClientDescription,
+		RunE:               pc.runCommand,
+		DisableFlagParsing: true,
+	}
+	productionCmd.SetUsageFunc(func(*cobra.Command) error {
+		pc.printHelp()
+		return nil
+	})
+	productionCmd.SetHelpFunc(func(*cobra.Command, []string) {
+		pc.printHelp()
+	})
+
+	pc.cmd = productionCmd
+	return pc
+}
+
 type productionCommand struct {
 	BaseCommand
 
@@ -61,27 +88,6 @@ func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error
 	}
 
 	return pc.sendProductionMessage(data)
-}
-
-func newProductionCommand() *productionCommand {
-	pc := &productionCommand{
-		targetOptions: targetOptions{
-			writeTimeout: 2 * time.Second,
-			exchangeName: "nwpc.operation.production",
-		},
-	}
-
-	productionCmd := &cobra.Command{
-		Use:                "production",
-		Short:              "send production messages",
-		Long:               productionDescription,
-		RunE:               pc.runCommand,
-		DisableFlagParsing: true,
-	}
-	productionCmd.SetUsageFunc(pc.printUsage)
-
-	pc.cmd = productionCmd
-	return pc
 }
 
 func (pc *productionCommand) parseMainOptions(args []string) error {
@@ -184,6 +190,48 @@ func (pc *productionCommand) getOperationData(
 	return data, nil
 }
 
+func (pc *productionCommand) sendProductionMessage(data interface{}) error {
+	message := common.EventMessage{
+		App:  appName,
+		Type: ProductionMessageType,
+		Time: time.Now(),
+		Data: data,
+	}
+
+	pc.targetOptions.routeKeyName = fmt.Sprintf(
+		"%s.production.%s", pc.ProductionInfo.System, pc.ProductionInfo.Type)
+
+	return sendToTarget(pc.targetOptions, message)
+}
+
+func (pc *productionCommand) printHelp() {
+	helpOutput := os.Stdout
+	fmt.Fprintf(helpOutput, "%s\n", productionDescription)
+
+	mainFlags := pc.generateCommandMainParser()
+	mainFlags.SetOutput(helpOutput)
+	fmt.Fprintf(helpOutput, "Main Flags:\n")
+	mainFlags.PrintDefaults()
+
+	fmt.Fprintf(helpOutput, "\n")
+	targetFlags := pc.targetOptions.generateFlags()
+	targetFlags.SetOutput(helpOutput)
+	fmt.Fprintf(helpOutput, "Target Flags:\n")
+	targetFlags.PrintDefaults()
+
+	operationProductionDescription := `
+Operation Production
+	Use stream oper. Systems include grapes_gfs_gmf, grapes_meso_3km and so on.`
+
+	fmt.Fprintf(helpOutput, "%s\n", operationProductionDescription)
+
+	operGenerator := OperationPropertiesGenerator{}
+	operFlags := operGenerator.generateFlags()
+	operFlags.SetOutput(helpOutput)
+	fmt.Fprintf(helpOutput, "\tFlags:\n")
+	operFlags.PrintDefaults()
+}
+
 type OperationPropertiesGenerator struct {
 	common.OperationProductionProperties
 	options struct {
@@ -226,48 +274,5 @@ func (parser *OperationPropertiesGenerator) parseOptions(args []string) error {
 		ForecastTime: parser.options.forecastTime,
 	}
 
-	return nil
-}
-
-func (pc *productionCommand) sendProductionMessage(data interface{}) error {
-	message := common.EventMessage{
-		App:  appName,
-		Type: ProductionMessageType,
-		Time: time.Now(),
-		Data: data,
-	}
-
-	pc.targetOptions.routeKeyName = fmt.Sprintf(
-		"%s.production.%s", pc.ProductionInfo.System, pc.ProductionInfo.Type)
-
-	return sendToTarget(pc.targetOptions, message)
-}
-
-func (pc *productionCommand) printHelp() {
-	fmt.Fprintf(os.Stderr, "%s\n", productionDescription)
-
-	mainFlags := pc.generateCommandMainParser()
-	fmt.Fprintf(os.Stderr, "Main Flags:\n")
-	mainFlags.PrintDefaults()
-
-	fmt.Fprintf(os.Stderr, "\n")
-	targetFlags := pc.targetOptions.generateFlags()
-	fmt.Fprintf(os.Stderr, "Target Flags:\n")
-	targetFlags.PrintDefaults()
-
-	operationProductionDescription := `
-Operation Production
-	Use stream oper. Systems include grapes_gfs_gmf, grapes_meso_3km and so on.`
-
-	fmt.Fprintf(os.Stderr, "%s\n", operationProductionDescription)
-
-	operGenerator := OperationPropertiesGenerator{}
-	operFlags := operGenerator.generateFlags()
-	fmt.Fprintf(os.Stderr, "\tFlags:\n")
-	operFlags.PrintDefaults()
-}
-
-func (pc *productionCommand) printUsage(cmd *cobra.Command) error {
-	pc.printHelp()
 	return nil
 }
