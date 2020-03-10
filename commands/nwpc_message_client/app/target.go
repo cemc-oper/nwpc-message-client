@@ -25,6 +25,21 @@ type targetOptions struct {
 }
 
 func (t *targetOptions) parseCommandTargetOptions(args []string) error {
+	targetFlagSet := t.generateFlags()
+	err := targetFlagSet.Parse(args)
+	if err != nil {
+		return fmt.Errorf("parse options has error: %s", err)
+	}
+
+	err = commands.CheckRequiredFlags(targetFlagSet)
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+
+	return nil
+}
+
+func (t *targetOptions) generateFlags() *pflag.FlagSet {
 	targetFlagSet := pflag.NewFlagSet("targetFlagSet", pflag.ContinueOnError)
 	targetFlagSet.ParseErrorsWhitelist.UnknownFlags = true
 
@@ -40,18 +55,7 @@ func (t *targetOptions) parseCommandTargetOptions(args []string) error {
 		"disable message deliver, just for debug.")
 
 	targetFlagSet.SetAnnotation("rabbitmq-server", commands.RequiredOption, []string{"true"})
-
-	err := targetFlagSet.Parse(args)
-	if err != nil {
-		return fmt.Errorf("parse options has error: %s", err)
-	}
-
-	err = commands.CheckRequiredFlags(targetFlagSet)
-	if err != nil {
-		return fmt.Errorf("%v", err)
-	}
-
-	return nil
+	return targetFlagSet
 }
 
 func sendToTarget(options targetOptions, message common.EventMessage) error {

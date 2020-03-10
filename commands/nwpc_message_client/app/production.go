@@ -6,6 +6,7 @@ import (
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"os"
 	"strconv"
 	"time"
 )
@@ -31,6 +32,8 @@ type productionCommand struct {
 
 		event  string
 		status string
+
+		help bool
 	}
 
 	targetOptions
@@ -38,6 +41,10 @@ type productionCommand struct {
 
 func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error {
 	err := pc.parseMainOptions(args)
+	if pc.mainOptions.help {
+		pc.printHelp()
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("parse main options has error: %v", err)
 	}
@@ -82,6 +89,9 @@ func (pc *productionCommand) parseMainOptions(args []string) error {
 	if err != nil {
 		return fmt.Errorf("parse options has error: %s", err)
 	}
+	if pc.mainOptions.help {
+		return nil
+	}
 
 	err = commands.CheckRequiredFlags(flagSet)
 	if err != nil {
@@ -110,6 +120,8 @@ func (pc *productionCommand) generateCommandMainParser() *pflag.FlagSet {
 		fmt.Sprintf("production event, such as %s", common.ProductionEventStorage))
 	flagSet.StringVar(&pc.mainOptions.status, "status", string(common.Complete),
 		fmt.Sprintf("event status, such as %s, %s", common.Complete, common.Aborted))
+
+	flagSet.BoolVar(&pc.mainOptions.help, "help", false, "print usage")
 
 	flagSet.SortFlags = false
 	flagSet.ParseErrorsWhitelist = pflag.ParseErrorsWhitelist{UnknownFlags: true}
@@ -179,7 +191,7 @@ type OperationPropertiesGenerator struct {
 	}
 }
 
-func (parser *OperationPropertiesGenerator) parseOptions(args []string) error {
+func (parser *OperationPropertiesGenerator) generateFlags() *pflag.FlagSet {
 	operFlagSet := pflag.NewFlagSet("operation", pflag.ContinueOnError)
 	operFlagSet.ParseErrorsWhitelist.UnknownFlags = true
 
@@ -189,7 +201,11 @@ func (parser *OperationPropertiesGenerator) parseOptions(args []string) error {
 		"forecast time, FFFh, 0h, 12h, ...")
 	operFlagSet.SetAnnotation("start-time", commands.RequiredOption, []string{"true"})
 	operFlagSet.SetAnnotation("forecast-time", commands.RequiredOption, []string{"true"})
+	return operFlagSet
+}
 
+func (parser *OperationPropertiesGenerator) parseOptions(args []string) error {
+	operFlagSet := parser.generateFlags()
 	err := operFlagSet.Parse(args)
 	if err != nil {
 		return fmt.Errorf("parse options has error: %s", err)
@@ -224,4 +240,28 @@ func (pc *productionCommand) sendProductionMessage(data interface{}) error {
 		"%s.production.%s", pc.ProductionInfo.System, pc.ProductionInfo.Type)
 
 	return sendToTarget(pc.targetOptions, message)
+}
+
+func (pc *productionCommand) printHelp() {
+	fmt.Fprintf(os.Stderr, "%s\n", productionDescription)
+
+	mainFlags := pc.generateCommandMainParser()
+	fmt.Fprintf(os.Stderr, "Main Flags:\n")
+	mainFlags.PrintDefaults()
+
+	fmt.Fprintf(os.Stderr, "\n")
+	targetFlags := pc.targetOptions.generateFlags()
+	fmt.Fprintf(os.Stderr, "Target Flags:\n")
+	targetFlags.PrintDefaults()
+
+	operationProductionDescription := `
+Operation Production
+	Use stream oper. Systems include grapes_gfs_gmf, grapes_meso_3km and so on.`
+
+	fmt.Fprintf(os.Stderr, "%s\n", operationProductionDescription)
+
+	operGenerator := OperationPropertiesGenerator{}
+	operFlags := operGenerator.generateFlags()
+	fmt.Fprintf(os.Stderr, "\tFlags:\n")
+	operFlags.PrintDefaults()
 }
