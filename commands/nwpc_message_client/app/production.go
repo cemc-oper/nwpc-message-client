@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -151,10 +150,10 @@ func (pc *productionCommand) fillProductionInfo() {
 }
 
 func (pc *productionCommand) fillProductionEventStatus() {
-	status, _ := strconv.Atoi(pc.mainOptions.status)
+	status := common.ToEventStatus(pc.mainOptions.status)
 	pc.ProductionEventStatus = common.ProductionEventStatus{
 		Event:  common.ProductionEvent(pc.mainOptions.event),
-		Status: common.EventStatus(status),
+		Status: status,
 	}
 }
 
