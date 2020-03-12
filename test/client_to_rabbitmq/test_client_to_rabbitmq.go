@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/nwpc-oper/nwpc-message-client/cmd/nwpc_message_client/app"
+	"github.com/nwpc-oper/nwpc-message-client/commands/nwpc_message_client/app"
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	"github.com/nwpc-oper/nwpc-message-client/common/sender"
 	log "github.com/sirupsen/logrus"
