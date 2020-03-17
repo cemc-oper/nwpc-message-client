@@ -119,12 +119,19 @@ func consumeProductionMessageToElastic(consumer *ProductionConsumer, messages <-
 					"component": "elastic",
 					"event":     "push",
 				}).Info("bulk size push...")
-				pushMessages(client, received, ctx)
-				log.WithFields(log.Fields{
-					"component": "elastic",
-					"event":     "push",
-				}).Info("bulk size push...done")
-				received = nil
+				err := pushMessages(client, received, ctx)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"component": "elastic",
+						"event":     "push",
+					}).Warn("bulk size push...failed")
+				} else {
+					log.WithFields(log.Fields{
+						"component": "elastic",
+						"event":     "push",
+					}).Infof("bulk size push...done, %d", len(received))
+					received = nil
+				}
 			}
 		case <-time.After(time.Second * 1):
 			if len(received) > 0 {
@@ -133,13 +140,26 @@ func consumeProductionMessageToElastic(consumer *ProductionConsumer, messages <-
 					"component": "elastic",
 					"event":     "push",
 				}).Info("time limit push...")
-				pushMessages(client, received, ctx)
-				log.WithFields(log.Fields{
-					"component": "elastic",
-					"event":     "push",
-				}).Info("time limit push...done")
-				received = nil
+				err := pushMessages(client, received, ctx)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"component": "elastic",
+						"event":     "push",
+					}).Warn("time limit push...failed")
+				} else {
+					log.WithFields(log.Fields{
+						"component": "elastic",
+						"event":     "push",
+					}).Infof("time limit push...done, %d", len(received))
+					received = nil
+				}
 			}
+		}
+		if len(received) >= consumer.BulkSize*10 {
+			log.WithFields(log.Fields{
+				"component": "elastic",
+				"event":     "push",
+			}).Fatalf("count of received messages is larger then %d times of bulk size: %d", 10, len(received))
 		}
 	}
 }
