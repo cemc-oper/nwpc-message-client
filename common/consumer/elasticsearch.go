@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"context"
+	"fmt"
 	"github.com/nwpc-oper/nwpc-message-client/common"
 	"github.com/olivere/elastic/v7"
 	log "github.com/sirupsen/logrus"
@@ -16,7 +17,7 @@ type messageWithIndex struct {
 	Message common.EventMessage
 }
 
-func pushMessages(client *elastic.Client, messages []messageWithIndex, ctx context.Context) {
+func pushMessages(client *elastic.Client, messages []messageWithIndex, ctx context.Context) error {
 	bulkRequest := client.Bulk()
 	for _, indexMessage := range messages {
 		request := elastic.NewBulkIndexRequest().
@@ -28,8 +29,9 @@ func pushMessages(client *elastic.Client, messages []messageWithIndex, ctx conte
 	if err != nil {
 		log.WithFields(log.Fields{
 			"component": "elastic",
-			"event":     "index",
+			"event":     "push",
 		}).Errorf("%v", err)
-		return
+		return fmt.Errorf("push message failed: %v", err)
 	}
+	return nil
 }
