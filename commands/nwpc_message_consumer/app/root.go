@@ -24,6 +24,7 @@ func (b *commandsBuilder) addAll() *commandsBuilder {
 		newVersionCommand(),
 		newProductionCommand(),
 		newEcflowClientCommand(),
+		newPredictCommand(),
 	)
 	return b
 }
