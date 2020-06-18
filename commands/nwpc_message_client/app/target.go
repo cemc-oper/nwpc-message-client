@@ -100,3 +100,44 @@ func sendToTarget(options targetOptions, message common.EventMessage) error {
 
 	return sendMessage(currentSender, messageBytes)
 }
+
+func sendBytesToTarget(options targetOptions, messageBytes []byte) error {
+	if options.disableSend {
+		log.WithFields(log.Fields{
+			"component": "nwpc_message_client",
+			"event":     "send",
+		}).Infof("message deliver is disabled by --disable-send option.")
+		fmt.Printf("%s\n", messageBytes)
+		return nil
+	}
+
+	senderType := RabbitMQSenderType
+	if options.useBroker {
+		senderType = BrokerSenderType
+	}
+
+	var currentSender sender.Sender
+	switch senderType {
+	case RabbitMQSenderType:
+		currentSender = sender.CreateRabbitMQSender(
+			options.rabbitmqServer, options.exchangeName, options.routeKeyName, options.writeTimeout)
+		break
+	case BrokerSenderType:
+		currentSender = sender.CreateBrokerSender(
+			options.brokerAddress,
+			options.rabbitmqServer,
+			options.exchangeName,
+			options.routeKeyName,
+			options.writeTimeout)
+		break
+	default:
+		return fmt.Errorf("SenderType is not supported: %d", senderType)
+	}
+	log.WithFields(log.Fields{
+		"component": "message",
+		"event":     "print",
+	}).Infof("%s", messageBytes)
+	fmt.Printf("%s\n", messageBytes)
+
+	return sendMessage(currentSender, messageBytes)
+}
