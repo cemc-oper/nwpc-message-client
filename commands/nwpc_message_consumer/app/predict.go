@@ -43,7 +43,7 @@ func (c *predictCommand) consumerPredict(cmd *cobra.Command, args []string) erro
 		Server: c.elasticServer,
 	}
 
-	predictComsumer := createPredictConsumer(
+	predictConsumer := createPredictConsumer(
 		source,
 		target,
 		c.workerCount,
@@ -51,7 +51,7 @@ func (c *predictCommand) consumerPredict(cmd *cobra.Command, args []string) erro
 		c.isDebug,
 	)
 
-	err := predictComsumer.ConsumeMessages()
+	err := predictConsumer.ConsumeMessages()
 	if err != nil {
 		log.WithFields(log.Fields{
 			"component": "ecflow-client",
