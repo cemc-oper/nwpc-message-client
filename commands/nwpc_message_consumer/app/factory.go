@@ -62,13 +62,13 @@ func createPredictConsumer(
 	workerCount int,
 	bulkSize int,
 	debug bool,
-) *consumer.EcflowClientConsumer {
-	ecConsumer := &consumer.EcflowClientConsumer{
+) *consumer.PredictConsumer {
+	predictConsumer := &consumer.PredictConsumer{
 		Source:      source,
 		Target:      target,
 		WorkerCount: workerCount,
 		BulkSize:    bulkSize,
 		Debug:       debug,
 	}
-	return ecConsumer
+	return predictConsumer
 }

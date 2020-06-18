@@ -94,7 +94,6 @@ func consumePredictMessageToElastic(consumer *PredictConsumer, messages <-chan a
 			}).Infof("received message...")
 
 			var event common.EventMessage
-			fmt.Println(d.Body)
 			err := json.Unmarshal(d.Body, &event)
 			if err != nil {
 				log.WithFields(log.Fields{
