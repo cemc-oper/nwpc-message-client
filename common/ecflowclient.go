@@ -13,6 +13,7 @@ func CreateEcflowClientMessage(commandOptions string) (*EcflowClientData, error)
 		NodeName:   os.Getenv("ECF_NAME"),
 		NodeRID:    os.Getenv("ECF_RID"),
 		TryNo:      os.Getenv("ECF_TRYNO"),
+		EcfDate:    os.Getenv("ECF_DATE"),
 	}
 	data.ParseCommandOptions(commandOptions)
 
@@ -28,6 +29,7 @@ type EcflowClientData struct {
 	NodeName   string              `json:"ecf_name"`
 	NodeRID    string              `json:"ecf_rid"`
 	TryNo      string              `json:"ecf_tryno"`
+	EcfDate    string              `json:"ecf_date"`
 }
 
 func (d *EcflowClientData) ParseCommandOptions(commandOptions string) {
