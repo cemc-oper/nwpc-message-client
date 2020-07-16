@@ -103,8 +103,7 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 				continue
 			}
 
-			messageTime := event.Time
-			indexName := messageTime.Format("2006-01-02")
+			indexName := getIndexForEcflowClientMessage(event)
 
 			received = append(received, messageWithIndex{
 				indexName, event,
@@ -163,4 +162,10 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 			}).Fatalf("Count of received messages is larger than %d times of bulk size: %s", 10, len(received))
 		}
 	}
+}
+
+func getIndexForEcflowClientMessage(event common.EventMessage) string {
+	messageTime := event.Time
+	indexName := fmt.Sprintf("ecflow-client-%s", messageTime.Format("2006-01-02"))
+	return indexName
 }
