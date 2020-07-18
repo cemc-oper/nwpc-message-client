@@ -10,7 +10,13 @@ set -e
 
 # call nwpc_message_client
 set +e
-nwpc_message_client ecflow-client --common-options="$*" --broker-address="login_b01:33384"
+NWPC_MESSAGE_CLIENT_BROKER_NODE=login_a06
+broker_node=$(getent hosts ${NWPC_MESSAGE_CLIENT_BROKER_NODE} | awk '{ print $1 }')
+nwpc_message_client ecflow-client \
+    --command-options="$*" \
+    --rabbitmq-server="amqp://guest:guest@10.28.32.114:32771" \
+    --broker-address="${broker_node}:33384" \
+    --with-broker
 set -e
 
 set +e
