@@ -241,6 +241,7 @@ func (pc *productionCommand) printHelp() {
 
 	operationProductionDescription := `
 Operation Production
+    --production-stream=oper
 	Use stream oper. Systems include grapes_gfs_gmf, grapes_meso_3km and so on.`
 
 	fmt.Fprintf(helpOutput, "%s\n", operationProductionDescription)
@@ -250,4 +251,17 @@ Operation Production
 	operFlags.SetOutput(helpOutput)
 	fmt.Fprintf(helpOutput, "\tFlags:\n")
 	operFlags.PrintDefaults()
+
+	epsProductionDescription := `
+Eps Production
+	--production-stream=eps
+	Use stream eps. Systems include grapes_geps and grapes_reps`
+
+	fmt.Fprintf(helpOutput, "%s\n", epsProductionDescription)
+
+	epsGenerator := EpsPropertiesGenerator{}
+	epsFlags := epsGenerator.generateFlags()
+	epsFlags.SetOutput(helpOutput)
+	fmt.Fprintf(helpOutput, "\tFlags:\n")
+	epsFlags.PrintDefaults()
 }

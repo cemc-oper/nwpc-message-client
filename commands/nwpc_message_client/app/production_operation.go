@@ -18,6 +18,7 @@ type OperationPropertiesGenerator struct {
 
 func (parser *OperationPropertiesGenerator) generateFlags() *pflag.FlagSet {
 	operFlagSet := pflag.NewFlagSet("operation", pflag.ContinueOnError)
+	operFlagSet.SortFlags = false
 	operFlagSet.ParseErrorsWhitelist.UnknownFlags = true
 
 	operFlagSet.StringVar(&parser.options.startTime, "start-time", "",

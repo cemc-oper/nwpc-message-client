@@ -19,6 +19,7 @@ type EpsPropertiesGenerator struct {
 
 func (parser *EpsPropertiesGenerator) generateFlags() *pflag.FlagSet {
 	epsFlagSet := pflag.NewFlagSet("eps", pflag.ContinueOnError)
+	epsFlagSet.SortFlags = false
 	epsFlagSet.ParseErrorsWhitelist.UnknownFlags = true
 
 	epsFlagSet.StringVar(&parser.options.startTime, "start-time", "",
