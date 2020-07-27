@@ -71,10 +71,10 @@ func SendMessage(index int) {
 
 	messageBytes, _ := json.Marshal(message)
 
-	log.WithFields(log.Fields{
-		"index": index,
-		"event": "start",
-	}).Infof("send message...")
+	//log.WithFields(log.Fields{
+	//	"index": index,
+	//	"event": "start",
+	//}).Infof("send message...")
 
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
@@ -89,40 +89,48 @@ func SendMessage(index int) {
 
 	defer conn.Close()
 
-	client := pb.NewMessageBrokerClient(conn)
+	currentCount := 1
+	totalCount := 2
+	for currentCount <= totalCount {
+		client := pb.NewMessageBrokerClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-	defer cancel()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
 
-	response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
-		Target: &pb.RabbitMQTarget{
-			Server:   rabbitmqServer,
-			Exchange: "nwpc-message",
-			RouteKey: "command.ecflow.ecflow_client",
-		},
-		Message: &pb.Message{
-			Data: messageBytes,
-		},
-	})
+		response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
+			Target: &pb.RabbitMQTarget{
+				Server:   rabbitmqServer,
+				Exchange: "nwpc-message",
+				RouteKey: "command.ecflow.ecflow_client",
+			},
+			Message: &pb.Message{
+				Data: messageBytes,
+			},
+		})
 
-	if err != nil {
-		log.WithFields(log.Fields{
-			"index": index,
-			"event": "error",
-		}).Errorf("send message...error: %v", err)
-		return
+		if err != nil {
+			log.WithFields(log.Fields{
+				"index": index,
+				"event": "error",
+			}).Errorf("send message try %d ...error: %v", currentCount, err)
+			currentCount += 1
+			continue
+		}
+
+		if response.ErrorNo != 0 {
+			log.WithFields(log.Fields{
+				"index": index,
+				"event": "error",
+			}).Errorf("send message try %d...error: response.ErrorNo: %v", currentCount, response.ErrorNo)
+			currentCount += 1
+			continue
+		}
+		break
 	}
 
-	if response.ErrorNo != 0 {
-		log.WithFields(log.Fields{
-			"index": index,
-			"event": "error",
-		}).Errorf("send message...error")
-		return
-	}
-	log.WithFields(log.Fields{
-		"index": index,
-		"event": "success",
-	}).Info("send message...done")
+	//log.WithFields(log.Fields{
+	//	"index": index,
+	//	"event": "success",
+	//}).Info("send message...done")
 	return
 }
