@@ -16,11 +16,13 @@ Messages are send to a rabbitmq server directly or via a broker running by nwpc_
 
 func newMessageCommand() *messageCommand {
 	mc := &messageCommand{
-		targetOptions: targetOptions{
-			writeTimeout: 2 * time.Second,
-			useBroker:    true,
-			exchangeName: "nwpc.operation.workflow",
-			routeKeyName: "ecflow.command.ecflow_client",
+		targetParser: targetParser{
+			defaultOption: targetOptions{
+				writeTimeout: 2 * time.Second,
+				useBroker:    true,
+				exchangeName: "nwpc.operation.workflow",
+				routeKeyName: "ecflow.command.ecflow_client",
+			},
 		},
 	}
 	messageCmd := &cobra.Command{
@@ -52,7 +54,7 @@ type messageCommand struct {
 		help         bool
 	}
 
-	targetOptions
+	targetParser
 }
 
 func (mc *messageCommand) runCommand(cmd *cobra.Command, args []string) error {
@@ -65,14 +67,14 @@ func (mc *messageCommand) runCommand(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	err = mc.targetOptions.parseCommandTargetOptions(args)
+	err = mc.targetParser.parseCommandTargetOptions(args)
 	if err != nil {
 		return fmt.Errorf("parse target options has eror: %v", err)
 	}
 
 	messageBytes := []byte(mc.mainOptions.messageBody)
 
-	return sendBytesToTarget(mc.targetOptions, messageBytes)
+	return sendBytesToTarget(mc.targetParser.option, messageBytes)
 }
 
 func (mc *messageCommand) generateMainFlags() *pflag.FlagSet {
@@ -81,10 +83,6 @@ func (mc *messageCommand) generateMainFlags() *pflag.FlagSet {
 
 	mainFlagSet.StringVar(&mc.mainOptions.messageBody, "message-body", "",
 		"message body, json bytes.")
-	mainFlagSet.StringVar(&mc.targetOptions.exchangeName, "exchange-name", "",
-		"exchange name for rabbitmq.")
-	mainFlagSet.StringVar(&mc.targetOptions.routeKeyName, "route-key-name", "",
-		"route key name for rabbitmq")
 	mainFlagSet.BoolVar(&mc.mainOptions.help, "help", false, "print usage")
 
 	mainFlagSet.SetAnnotation("message-body", commands.RequiredOption, []string{"true"})
@@ -122,7 +120,7 @@ func (mc *messageCommand) printHelp() {
 	mainFlags.PrintDefaults()
 
 	fmt.Fprintf(helpOutput, "\n")
-	targetFlags := mc.targetOptions.generateFlags()
+	targetFlags := mc.targetParser.generateFlags()
 	targetFlags.SetOutput(helpOutput)
 	fmt.Fprintf(helpOutput, "Target Flags:\n")
 	targetFlags.PrintDefaults()

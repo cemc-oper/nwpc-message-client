@@ -18,11 +18,13 @@ Messages are send to a rabbitmq server directly or via a broker running by nwpc_
 
 func newEcflowClientCommand() *ecflowClientCommand {
 	ec := &ecflowClientCommand{
-		targetOptions: targetOptions{
-			writeTimeout: 2 * time.Second,
-			useBroker:    true,
-			exchangeName: "nwpc.operation.workflow",
-			routeKeyName: "ecflow.command.ecflow_client",
+		targetParser: targetParser{
+			defaultOption: targetOptions{
+				writeTimeout: 2 * time.Second,
+				useBroker:    true,
+				exchangeName: "nwpc.operation.workflow",
+				routeKeyName: "ecflow.command.ecflow_client",
+			},
 		},
 	}
 	ecFlowClientCmd := &cobra.Command{
@@ -52,7 +54,7 @@ type ecflowClientCommand struct {
 		help           bool
 	}
 
-	targetOptions
+	targetParser
 }
 
 func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) error {
@@ -65,7 +67,7 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 		return nil
 	}
 
-	err = ec.targetOptions.parseCommandTargetOptions(args)
+	err = ec.targetParser.parseCommandTargetOptions(args)
 	if err != nil {
 		return fmt.Errorf("parse target options has eror: %v", err)
 	}
@@ -82,7 +84,7 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 		Data: data,
 	}
 
-	return sendToTarget(ec.targetOptions, message)
+	return sendToTarget(ec.targetParser.option, message)
 }
 
 func (ec *ecflowClientCommand) generateMainFlags() *pflag.FlagSet {
@@ -129,7 +131,7 @@ func (ec *ecflowClientCommand) printHelp() {
 	mainFlags.PrintDefaults()
 
 	fmt.Fprintf(helpOutput, "\n")
-	targetFlags := ec.targetOptions.generateFlags()
+	targetFlags := ec.targetParser.generateFlags()
 	targetFlags.SetOutput(helpOutput)
 	fmt.Fprintf(helpOutput, "Target Flags:\n")
 	targetFlags.PrintDefaults()

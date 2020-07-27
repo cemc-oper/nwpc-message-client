@@ -1,14 +1,13 @@
 package app
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 )
 
 func init() {
-	fmt.Println("NWPC Message Client")
-	fmt.Println("This program is under development. Please contact Wang Dapeng(3083) if it fails.")
+	//fmt.Println("NWPC Message Client")
+	//fmt.Println("This program is under development. Please contact Wang Dapeng(3083) if it fails.")
 }
 
 const (

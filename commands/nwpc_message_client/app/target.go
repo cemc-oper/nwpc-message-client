@@ -24,7 +24,12 @@ type targetOptions struct {
 	routeKeyName string
 }
 
-func (t *targetOptions) parseCommandTargetOptions(args []string) error {
+type targetParser struct {
+	option        targetOptions
+	defaultOption targetOptions
+}
+
+func (t *targetParser) parseCommandTargetOptions(args []string) error {
 	targetFlagSet := t.generateFlags()
 	err := targetFlagSet.Parse(args)
 	if err != nil {
@@ -39,19 +44,24 @@ func (t *targetOptions) parseCommandTargetOptions(args []string) error {
 	return nil
 }
 
-func (t *targetOptions) generateFlags() *pflag.FlagSet {
+func (t *targetParser) generateFlags() *pflag.FlagSet {
 	targetFlagSet := pflag.NewFlagSet("targetFlagSet", pflag.ContinueOnError)
+	targetFlagSet.SortFlags = false
 	targetFlagSet.ParseErrorsWhitelist.UnknownFlags = true
 
-	targetFlagSet.StringVar(&t.rabbitmqServer, "rabbitmq-server", "",
+	targetFlagSet.StringVar(&t.option.rabbitmqServer, "rabbitmq-server", "",
 		"rabbitmq server, such as amqp://guest:guest@host:port")
+	targetFlagSet.StringVar(&t.option.exchangeName, "exchange-name", t.defaultOption.exchangeName,
+		"exchange name for RabbitMQ.")
+	targetFlagSet.StringVar(&t.option.routeKeyName, "route-key-name", t.defaultOption.routeKeyName,
+		"route key name for RabbitMQ.")
 
-	targetFlagSet.BoolVar(&t.useBroker, "with-broker", false,
+	targetFlagSet.BoolVar(&t.option.useBroker, "with-broker", false,
 		"deliver message using a broker, should set --broker-address when enabled.")
-	targetFlagSet.StringVar(&t.brokerAddress, "broker-address", "",
+	targetFlagSet.StringVar(&t.option.brokerAddress, "broker-address", "",
 		"broker address, work with --with-broker")
 
-	targetFlagSet.BoolVar(&t.disableSend, "disable-send", false,
+	targetFlagSet.BoolVar(&t.option.disableSend, "disable-send", false,
 		"disable message deliver, just for debug.")
 
 	targetFlagSet.SetAnnotation("rabbitmq-server", commands.RequiredOption, []string{"true"})
@@ -79,7 +89,10 @@ func sendToTarget(options targetOptions, message common.EventMessage) error {
 	switch senderType {
 	case RabbitMQSenderType:
 		currentSender = sender.CreateRabbitMQSender(
-			options.rabbitmqServer, options.exchangeName, options.routeKeyName, options.writeTimeout)
+			options.rabbitmqServer,
+			options.exchangeName,
+			options.routeKeyName,
+			options.writeTimeout)
 		break
 	case BrokerSenderType:
 		currentSender = sender.CreateBrokerSender(

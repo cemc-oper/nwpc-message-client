@@ -19,9 +19,11 @@ Messages are send to a rabbitmq server directly or via a broker running by broke
 
 func newProductionCommand() *productionCommand {
 	pc := &productionCommand{
-		targetOptions: targetOptions{
-			writeTimeout: 2 * time.Second,
-			exchangeName: "nwpc.operation.production",
+		targetParser: targetParser{
+			defaultOption: targetOptions{
+				writeTimeout: 2 * time.Second,
+				exchangeName: "nwpc.operation.production",
+			},
 		},
 	}
 
@@ -62,7 +64,7 @@ type productionCommand struct {
 		help bool
 	}
 
-	targetOptions
+	targetParser
 }
 
 func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error {
@@ -75,7 +77,7 @@ func (pc *productionCommand) runCommand(cmd *cobra.Command, args []string) error
 		return fmt.Errorf("parse main options has error: %v", err)
 	}
 
-	err = pc.targetOptions.parseCommandTargetOptions(args)
+	err = pc.targetParser.parseCommandTargetOptions(args)
 	if err != nil {
 		return fmt.Errorf("parser target options has error: %v", err)
 	}
@@ -216,10 +218,10 @@ func (pc *productionCommand) sendProductionMessage(data interface{}) error {
 		Data: data,
 	}
 
-	pc.targetOptions.routeKeyName = fmt.Sprintf(
+	pc.targetParser.option.routeKeyName = fmt.Sprintf(
 		"%s.production.%s", pc.ProductionInfo.System, pc.ProductionInfo.Type)
 
-	return sendToTarget(pc.targetOptions, message)
+	return sendToTarget(pc.targetParser.option, message)
 }
 
 func (pc *productionCommand) printHelp() {
@@ -232,7 +234,7 @@ func (pc *productionCommand) printHelp() {
 	mainFlags.PrintDefaults()
 
 	fmt.Fprintf(helpOutput, "\n")
-	targetFlags := pc.targetOptions.generateFlags()
+	targetFlags := pc.targetParser.generateFlags()
 	targetFlags.SetOutput(helpOutput)
 	fmt.Fprintf(helpOutput, "Target Flags:\n")
 	targetFlags.PrintDefaults()
