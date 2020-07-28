@@ -21,7 +21,7 @@ func newProductionCommand() *productionCommand {
 	pc := &productionCommand{
 		targetParser: targetParser{
 			defaultOption: targetOptions{
-				brokerTryNo:  2,
+				brokerTries:  2,
 				writeTimeout: 2 * time.Second,
 				exchangeName: "nwpc.operation.production",
 			},

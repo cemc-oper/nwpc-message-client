@@ -20,7 +20,7 @@ func newMessageCommand() *messageCommand {
 			defaultOption: targetOptions{
 				writeTimeout: 2 * time.Second,
 				useBroker:    true,
-				brokerTryNo:  2,
+				brokerTries:  2,
 				exchangeName: "nwpc.operation.workflow",
 				routeKeyName: "ecflow.command.ecflow_client",
 			},
