@@ -4,6 +4,7 @@ import "time"
 
 func CreateBrokerSender(
 	brokerAddress string,
+	brokerTryNo int,
 	rabbitMQServer string,
 	exchange string,
 	routeKey string,
@@ -17,6 +18,7 @@ func CreateBrokerSender(
 
 	brokerSender := BrokerSender{
 		BrokerAddress: brokerAddress,
+		BrokerTryNo:   brokerTryNo,
 		Target:        rabbitmqTarget,
 	}
 

@@ -17,6 +17,7 @@ type targetOptions struct {
 
 	useBroker     bool
 	brokerAddress string
+	brokerTryNo   int
 
 	disableSend bool
 
@@ -60,6 +61,8 @@ func (t *targetParser) generateFlags() *pflag.FlagSet {
 		"deliver message using a broker, should set --broker-address when enabled.")
 	targetFlagSet.StringVar(&t.option.brokerAddress, "broker-address", "",
 		"broker address, work with --with-broker")
+	targetFlagSet.IntVar(&t.option.brokerTryNo, "broker-try-no", t.defaultOption.brokerTryNo,
+		"try counts when send message to broker, work with --with-broker")
 
 	targetFlagSet.BoolVar(&t.option.disableSend, "disable-send", false,
 		"disable message deliver, just for debug.")
@@ -97,6 +100,7 @@ func sendToTarget(options targetOptions, message common.EventMessage) error {
 	case BrokerSenderType:
 		currentSender = sender.CreateBrokerSender(
 			options.brokerAddress,
+			options.brokerTryNo,
 			options.rabbitmqServer,
 			options.exchangeName,
 			options.routeKeyName,
@@ -138,6 +142,7 @@ func sendBytesToTarget(options targetOptions, messageBytes []byte) error {
 	case BrokerSenderType:
 		currentSender = sender.CreateBrokerSender(
 			options.brokerAddress,
+			options.brokerTryNo,
 			options.rabbitmqServer,
 			options.exchangeName,
 			options.routeKeyName,
