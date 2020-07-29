@@ -15,7 +15,7 @@ All tools will be installed in `bin` directory.
 Run `nwpc_message_client production` to send message for production.
 
 The following message sends GRIB2 production message for GRAPES GFS GMF system 
-via a broker server using by `nwpc_message_client borker`.
+via a broker server using by `nwpc_message_client broker`.
 
 ```bash
 nwpc_message_client production \
