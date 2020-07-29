@@ -88,10 +88,10 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 		select {
 		case d := <-messages:
 			// parse message to generate message index
-			log.WithFields(log.Fields{
-				"component": "elastic",
-				"event":     "message",
-			}).Infof("received message...")
+			//log.WithFields(log.Fields{
+			//	"component": "elastic",
+			//	"event":     "message",
+			//}).Infof("received message...")
 
 			var event common.EventMessage
 			err := json.Unmarshal(d.Body, &event)
@@ -108,10 +108,10 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 			received = append(received, messageWithIndex{
 				indexName, event,
 			})
-			log.WithFields(log.Fields{
-				"component": "elastic",
-				"event":     "message",
-			}).Infof("receive message...parsed")
+			//log.WithFields(log.Fields{
+			//	"component": "elastic",
+			//	"event":     "message",
+			//}).Infof("receive message...parsed")
 
 			if len(received) > consumer.BulkSize {
 				// send to elasticsearch
