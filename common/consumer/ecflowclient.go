@@ -129,7 +129,7 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 					log.WithFields(log.Fields{
 						"component": "elastic",
 						"event":     "push",
-					}).Infof("bulk size push...done, %s", len(received))
+					}).Infof("bulk size push...done, %d", len(received))
 					received = nil
 				}
 			}
@@ -150,7 +150,7 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 					log.WithFields(log.Fields{
 						"component": "elastic",
 						"event":     "push",
-					}).Infof("time limit push...done, %s", len(received))
+					}).Infof("time limit push...done, %d", len(received))
 					received = nil
 				}
 			}
@@ -159,7 +159,7 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 			log.WithFields(log.Fields{
 				"component": "elastic",
 				"event":     "push",
-			}).Fatalf("Count of received messages is larger than %d times of bulk size: %s", 10, len(received))
+			}).Fatalf("Count of received messages is larger than %d times of bulk size: %d", 10, len(received))
 		}
 	}
 }
