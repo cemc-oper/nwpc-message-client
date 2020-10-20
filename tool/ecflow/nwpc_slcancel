@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# Cancel ecflow job which is running in Slurm.
+#
+# Usage:
+# 	nwpc_slcancel %ECF_RID% %ECF_NAME% %ECF_HOST% %ECF_PORT% %ECF_DATE%
+
+
+NWPC_MESSAGE_CLIENT_BASE=/g1/u/nwp_pd/nwpc_message_client
+source ${NWPC_MESSAGE_CLIENT_BASE}/conf/config-develop-ecflow.sh
+export PATH=${NWPC_MESSAGE_CLIENT_BASE}/tool/ecflow:${PATH}
+
+
+usage() {
+  echo "Cancel ecflow job which is running in Slurm."
+  echo "Usage: nwpc_slcancel %ECF_RID% %ECF_NAME% %ECF_HOST% %ECF_PORT% %ECF_DATE%"
+}
+
+err() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $@"
+}
+
+if [[ $# -ne 5 ]]
+then
+  err "error params"
+  usage
+  exit 1
+fi
+
+set -u
+set -ex
+
+ecf_rid=
+task_name=
+ecf_host=
+ecf_port=
+
+ecf_rid=$1
+task_name=$2
+ecf_host=$3
+ecf_port=$4
+
+export ECF_DATE=$5
+export ECF_RID=${ecf_rid}
+
+# this is a virtual command.
+set -e
+broker_node=$(getent hosts ${NWPC_MESSAGE_CLIENT_BROKER_NODE} | awk '{ print $1 }')
+${NWPC_MESSAGE_CLINET_PROGRAM} ecflow-client \
+    --command-options="--cancel" \
+    --rabbitmq-server="${NWPC_MESSAGE_CLIENT_RABBITMQ_ADDRESS}" \
+    --broker-address="${broker_node}:${NWPC_MESSAGE_CLIENT_BROKER_PORT}" \
+    --with-broker
+set +e
+
+scancel ${ecf_rid}
+
+ecflow_client --host=${ecf_host} --port=${ecf_port} --force=aborted ${task_name}

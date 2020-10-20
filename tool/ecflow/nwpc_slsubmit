@@ -1,0 +1,137 @@
+#!/bin/bash
+#
+# Submit ecFlow job script to Slurm. And use nwpc-message-client to send messages.
+#
+# Usage:
+# 	nwpc_slsubmit %ECF_JOB% %ECF_NAME% %ECF_TRIES% %ECF_TRYNO% %ECF_HOST% %ECF_PORT% %ECF_DATE%
+#
+# NOTE:
+#	Variable WORKDIR must be set in the shell environment.
+
+# loading nwpc-message-client environment...
+NWPC_MESSAGE_CLIENT_BASE=/g1/u/nwp_pd/nwpc_message_client
+source ${NWPC_MESSAGE_CLIENT_BASE}/conf/config-develop-ecflow.sh
+export PATH=${NWPC_MESSAGE_CLIENT_BASE}/tool/ecflow:${PATH}
+
+usage() {
+  echo "Submit ecflow job script to slurm."
+  echo "Usage: slsubmit6 %ECF_JOB% %ECF_NAME% %ECF_TRIES% %ECF_TRYNO% %ECF_HOST% %ECF_PORT%"
+}
+
+err() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $@"
+}
+
+submit_log() {
+	if [[ "$SUBMIT_LOG" = "true" ]]; then
+		echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]$@" >> ${submit_log_path}
+	fi
+}
+
+debug() {
+	if [[ "$DEBUG" = "true" ]]; then
+		echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]$@" >> ${debug_log_path}
+	fi
+}
+
+error_log() {
+	if [[ "$ERROR_LOG" = "true" ]]; then
+		echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]$@" >> ${error_log_path}
+	fi
+}
+
+# for test use
+export DEBUG=true
+export SUBMIT_LOG=true
+export ERROR_LOG=true
+
+export log_dir=$WORKDIR/sublog
+
+export submit_log_path=${log_dir}/slsubmit6.submit.log
+export debug_log_path=${log_dir}/slsubmit6.debug.log
+export error_log_path=${log_dir}/slsubmit6.error.log
+
+test -d ${log_dir} ||mkdir -p ${log_dir}
+
+if [[ $# -ne 7 ]]
+then
+  err "error params"
+  usage
+  exit 1
+fi
+
+set -u
+set -x
+
+job_name=
+task_name=
+ecf_tries=
+ecf_try_no=
+job_out=
+
+job_name=$1
+task_name=$2
+ecf_tries=$3
+ecf_try_no=$4
+ecf_host=$5
+ecf_port=$6
+ecf_date=$7
+
+export ECF_HOST=${ecf_host}
+export ECF_PORT=${ecf_port}
+export ECF_NAME=${task_name}
+export ECF_RID=
+export ECF_TYRNO=${ecf_try_no}
+export ECF_DATE=${ecf_date}
+
+if [[ ! -n "${job_out}" ]]
+then
+	job_out=$( echo ${job_name} | sed 's/job\([0-9]*\)$/\1/g' )
+fi
+job_err_output_file=${job_out}.err
+
+debug "${job_name} ${task_name} ${ecf_tries} ${ecf_try_no}"
+
+# this is a virtual command.
+set -e
+broker_node=$(getent hosts ${NWPC_MESSAGE_CLIENT_BROKER_NODE} | awk '{ print $1 }')
+${NWPC_MESSAGE_CLINET_PROGRAM} ecflow-client \
+    --command-options="--submit" \
+    --rabbitmq-server="${NWPC_MESSAGE_CLIENT_RABBITMQ_ADDRESS}" \
+    --broker-address="${broker_node}:${NWPC_MESSAGE_CLIENT_BROKER_PORT}" \
+    --with-broker
+set +e
+
+submit_log "sbatch $job_name"
+submit_output=$(sbatch ${job_name} 2>>${submit_log_path})
+# submit_output=$(sbatch asdfasdfasdf 2>>${submit_log_path})
+
+rid=$(echo ${submit_output} | cut -d ' ' -f 4)
+
+if [ -n "$rid" ]; then
+	debug "sbatch success: ${task_name}"
+	export ECF_RID=$rid
+	#ecflow_client --host=${ecf_host} --port=${ecf_port} \
+        #--alter add variable ECF_RID ${rid} ${task_name}
+else
+	debug "submit failed ${task_name} at TRYNO ${ecf_try_no} SUBMIT_OUTPUT: ${submit_output}"
+	#if [[ ${ecf_try_no} -ge ${ecf_tries} ]]; then
+	if [[ ${ecf_try_no} -ge 0 ]]; then
+		debug "abort ${task_name} after ${ecf_tries} tries"
+		cat > ${job_err_output_file} <<EOF
+[$(date +"%Y-%m-%d %H:%M:%S")] Failed to submit job to Slurm after ${ecf_tries} tries.
+[$(date +"%Y-%m-%d %H:%M:%S")] Submit command: $@
+EOF
+		error_log "[slsubmit6]submit failed: $@"
+		ecflow_client --host=${ecf_host} --port=${ecf_port} \
+            --force=aborted ${task_name}
+	else
+		debug "rerun ${task_name} after TRYNO ${ecf_try_no}"
+		cat > ${job_err_output_file} <<EOF
+[$(date +"%Y-%m-%d %H:%M:%S")] Failed to submit job to Slurm at tryno ${ecf_try_no}.
+EOF
+		error_log "[slsubmit6]submit failed: $@"
+		ecflow_client --host=${ecf_host} --port=${ecf_port} \
+            --run force ${task_name}
+	fi
+fi

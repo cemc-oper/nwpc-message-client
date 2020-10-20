@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+# Submit ecFlow job script. And use nwpc-message-client to send messages.
+#
+# Usage:
+# 	nwpc_submit %ECF_JOB% %ECF_JOBOUT% %ECF_NAME% %ECF_TRYNO% %ECF_HOST% %ECF_PORT% %ECF_DATE%
+
+# loading nwpc-message-client environment...
+NWPC_MESSAGE_CLIENT_BASE=/g1/u/nwp_pd/nwpc_message_client
+source ${NWPC_MESSAGE_CLIENT_BASE}/conf/config-develop-ecflow.sh
+export PATH=${NWPC_MESSAGE_CLIENT_BASE}/tool/ecflow:${PATH}
+
+if [[ $# -ne 7 ]]
+then
+  err "error params"
+  exit 1
+fi
+
+set -u
+set -x
+
+job_name=
+task_name=
+ecf_tries=
+ecf_try_no=
+job_out=
+
+job_name=$1
+job_out=$2
+task_name=$3
+ecf_try_no=$4
+ecf_host=$5
+ecf_port=$6
+ecf_date=$7
+
+export ECF_HOST=${ecf_host}
+export ECF_PORT=${ecf_port}
+export ECF_NAME=${task_name}
+export ECF_RID=
+export ECF_TYRNO=${ecf_try_no}
+export ECF_DATE=${ecf_date}
+
+# this is a virtual command.
+set -e
+broker_node=$(getent hosts ${NWPC_MESSAGE_CLIENT_BROKER_NODE} | awk '{ print $1 }')
+${NWPC_MESSAGE_CLINET_PROGRAM} ecflow-client \
+    --command-options="--submit" \
+    --rabbitmq-server="${NWPC_MESSAGE_CLIENT_RABBITMQ_ADDRESS}" \
+    --broker-address="${broker_node}:${NWPC_MESSAGE_CLIENT_BROKER_PORT}" \
+    --with-broker
+set +e
+
+${job_name} 1> ${job_out} 2>&1
