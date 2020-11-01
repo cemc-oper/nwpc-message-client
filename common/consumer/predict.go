@@ -99,7 +99,11 @@ func consumePredictMessageToElastic(consumer *PredictConsumer, messages <-chan a
 				log.WithFields(log.Fields{
 					"component": "consumer",
 					"event":     "message",
-				}).Errorf("can't create EventMessage: %s", d.Body)
+				}).Errorf("can't create EventMessage: %v", err)
+				log.WithFields(log.Fields{
+					"component": "consumer",
+					"event":     "message",
+				}).Errorf("error message body: %v", d.Body)
 				continue
 			}
 

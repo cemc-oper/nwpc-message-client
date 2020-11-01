@@ -99,7 +99,11 @@ func consumeMessageToElastic(consumer *EcflowClientConsumer, messages <-chan amq
 				log.WithFields(log.Fields{
 					"component": "consumer",
 					"event":     "message",
-				}).Errorf("can't create EventMessage: %s", d.Body)
+				}).Errorf("can't create EventMessage: %v", err)
+				log.WithFields(log.Fields{
+					"component": "consumer",
+					"event":     "message",
+				}).Errorf("error message body: %v", d.Body)
 				continue
 			}
 
