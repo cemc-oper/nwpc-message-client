@@ -25,14 +25,15 @@ func (s *BrokerSender) SendMessage(message []byte) error {
 
 	defer conn.Close()
 
-	currentCount := 1
+	currentCount := 0
 	totalCount := 2
 	if s.BrokerTryNo == 0 {
 		totalCount = 1
 	}
 
 	successful := false
-	for currentCount <= totalCount {
+	for currentCount < totalCount {
+		currentCount += 1
 		timeLimit := time.Second * time.Duration(1+currentCount)
 		client := pb.NewMessageBrokerClient(conn)
 		ctx, cancel := context.WithTimeout(context.Background(), timeLimit)
