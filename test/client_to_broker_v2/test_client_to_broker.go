@@ -132,6 +132,10 @@ func SendMessage(index int, workerLog *log.Logger) {
 			"index": index,
 			"event": "error",
 		}).Errorf("send message failed: %v", err)
+		log.WithFields(log.Fields{
+			"index": index,
+			"event": "error",
+		}).Errorf("send message failed: %v", err)
 	}
 
 	return
