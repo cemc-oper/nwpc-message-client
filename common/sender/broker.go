@@ -34,21 +34,25 @@ func (s *BrokerSender) SendMessage(message []byte) error {
 	successful := false
 	for currentCount < totalCount {
 		currentCount += 1
-		timeLimit := time.Second * time.Duration(1+currentCount)
 		client := pb.NewMessageBrokerClient(conn)
+
+		timeLimit := time.Second * time.Duration(currentCount)
 		ctx, cancel := context.WithTimeout(context.Background(), timeLimit)
 		defer cancel()
 
-		response, err := client.SendRabbitMQMessage(ctx, &pb.RabbitMQMessage{
-			Target: &pb.RabbitMQTarget{
-				Server:   s.Target.Server,
-				Exchange: s.Target.Exchange,
-				RouteKey: s.Target.RouteKey,
+		response, err := client.SendRabbitMQMessage(
+			ctx,
+			&pb.RabbitMQMessage{
+				Target: &pb.RabbitMQTarget{
+					Server:   s.Target.Server,
+					Exchange: s.Target.Exchange,
+					RouteKey: s.Target.RouteKey,
+				},
+				Message: &pb.Message{
+					Data: message,
+				},
 			},
-			Message: &pb.Message{
-				Data: message,
-			},
-		})
+		)
 
 		if err != nil {
 			log.WithFields(log.Fields{

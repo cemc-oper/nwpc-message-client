@@ -72,16 +72,32 @@ func newBrokerCommand() *brokerCommand {
 		RunE:  bc.runCommand,
 	}
 
-	brokerCmd.Flags().StringVar(&bc.brokerAddress, "address", ":33383",
-		"broker rpc address, use tcp port.")
+	brokerCmd.Flags().StringVar(
+		&bc.brokerAddress,
+		"address",
+		":33383",
+		"broker rpc address, use tcp port.",
+	)
 
-	brokerCmd.Flags().BoolVar(&bc.disableDeliver, "disable-deliver", false,
-		"disable deliver messages to message queue, just for debug.")
+	brokerCmd.Flags().BoolVar(
+		&bc.disableDeliver,
+		"disable-deliver",
+		false,
+		"disable deliver messages to message queue, just for debug.",
+	)
 
-	brokerCmd.Flags().BoolVar(&bc.enableProfiling, "enable-profiling", false,
-		"enable profiling, just for debug.")
-	brokerCmd.Flags().StringVar(&bc.profilingAddress, "profiling-address", "127.0.0.1:31485",
-		"profiling address, just for debug.")
+	brokerCmd.Flags().BoolVar(
+		&bc.enableProfiling,
+		"enable-profiling",
+		false,
+		"enable profiling, just for debug.",
+	)
+	brokerCmd.Flags().StringVar(
+		&bc.profilingAddress,
+		"profiling-address",
+		"127.0.0.1:31485",
+		"profiling address, just for debug.",
+	)
 
 	bc.cmd = brokerCmd
 	return bc
