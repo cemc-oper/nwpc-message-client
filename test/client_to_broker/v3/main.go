@@ -4,7 +4,6 @@ import (
 	"github.com/nwpc-oper/nwpc-message-client/test/client_to_broker"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"math/rand"
 	"os"
 	"time"
 )
@@ -72,7 +71,6 @@ var rootCmd = &cobra.Command{
 	Long:  LongDescription,
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = os.MkdirAll(logDirectory, 0755)
-		brokerCount := len(brokerAddress)
 		for _, broker := range brokerAddress {
 			log.Infof("find broker: %s", broker)
 		}
@@ -84,11 +82,9 @@ var rootCmd = &cobra.Command{
 
 				c := time.Tick(1 * time.Second)
 				for _ = range c {
-					brokerIndex := rand.Intn(brokerCount)
-					broker := brokerAddress[brokerIndex]
-					client_to_broker.SendMessage(
+					client_to_broker.SendMessageViaBrokers(
 						index,
-						broker,
+						brokerAddress,
 						rabbitmqServer,
 						workerLog,
 					)
