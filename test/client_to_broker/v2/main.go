@@ -72,7 +72,8 @@ var rootCmd = &cobra.Command{
 
 		for i := 0; i < workerCount; i++ {
 			go func(index int) {
-				workerLog := client_to_broker.CreateWorkerLog(index, logDirectory)
+				workerLog, logFile := client_to_broker.CreateWorkerLog(index, logDirectory)
+				defer logFile.Close()
 
 				c := time.Tick(1 * time.Second)
 				for _ = range c {
