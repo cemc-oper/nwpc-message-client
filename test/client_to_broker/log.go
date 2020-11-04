@@ -1,4 +1,4 @@
-package main
+package client_to_broker
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-func createWorkerLog(index int, logDir string) *log.Logger {
+func CreateWorkerLog(index int, logDir string) *log.Logger {
 	var workerLog = log.New()
 
 	logName := fmt.Sprintf("worker.%d.log", index)

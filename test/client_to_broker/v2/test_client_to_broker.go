@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/nwpc-oper/nwpc-message-client/test/client_to_broker"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
@@ -71,11 +72,16 @@ var rootCmd = &cobra.Command{
 
 		for i := 0; i < workerCount; i++ {
 			go func(index int) {
-				workerLog := createWorkerLog(index, logDirectory)
+				workerLog := client_to_broker.CreateWorkerLog(index, logDirectory)
 
 				c := time.Tick(1 * time.Second)
 				for _ = range c {
-					SendMessage(index, brokerAddress, workerLog)
+					client_to_broker.SendMessage(
+						index,
+						brokerAddress,
+						rabbitmqServer,
+						workerLog,
+					)
 				}
 			}(i)
 		}

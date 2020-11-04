@@ -1,4 +1,4 @@
-package main
+package client_to_broker
 
 import (
 	"encoding/json"
@@ -12,13 +12,14 @@ import (
 func SendMessage(
 	index int,
 	broker string,
+	rabbitmq string,
 	workerLog *log.Logger,
 ) {
 	brokerSender := sender.BrokerSender{
 		BrokerAddress: broker,
 		BrokerTryNo:   2,
 		Target: sender.RabbitMQTarget{
-			Server:       rabbitmqServer,
+			Server:       rabbitmq,
 			Exchange:     "nwpc-message",
 			RouteKey:     "command.ecflow.ecflow_client",
 			WriteTimeout: time.Second,
