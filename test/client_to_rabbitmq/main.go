@@ -80,8 +80,8 @@ func Execute() {
 }
 
 const (
-	exchangeName = "nwpc-messsage"
-	routeKeyName = "command.ecflow.ecflow_client"
+	exchangeName = "nwpc.operation.workflow.test"
+	routeKeyName = "ecflow.command.ecflow_client"
 	writeTimeOut = 2 * time.Second
 )
 
