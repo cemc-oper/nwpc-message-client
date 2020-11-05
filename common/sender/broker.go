@@ -75,7 +75,7 @@ func (s *BrokerSender) SendMessage(message []byte) error {
 	}
 
 	if !successful {
-		return fmt.Errorf("send message has error after %d tries", totalCount)
+		return fmt.Errorf("send message has error after %d tries: %v", totalCount, err)
 	}
 
 	return nil

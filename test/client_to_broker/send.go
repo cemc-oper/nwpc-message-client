@@ -22,7 +22,7 @@ func SendMessage(
 		Target: sender.RabbitMQTarget{
 			Server:       rabbitmq,
 			Exchange:     "nwpc-message",
-			RouteKey:     "command.ecflow.ecflow_client",
+			RouteKey:     "ecflow.command.ecflow_client",
 			WriteTimeout: time.Second,
 		},
 	}
@@ -76,7 +76,7 @@ func SendMessageViaBrokers(
 			BrokerTryNo:   2,
 			Target: sender.RabbitMQTarget{
 				Server:       rabbitmq,
-				Exchange:     "nwpc-message",
+				Exchange:     "nwpc.operation.workflow.test",
 				RouteKey:     "command.ecflow.ecflow_client",
 				WriteTimeout: time.Second,
 			},
