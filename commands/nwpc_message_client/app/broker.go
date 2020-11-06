@@ -33,6 +33,8 @@ type brokerCommand struct {
 	profilingAddress string
 }
 
+const BulkSize = 500
+
 func (bc *brokerCommand) runCommand(cmd *cobra.Command, args []string) error {
 
 	log.WithFields(log.Fields{
@@ -63,14 +65,19 @@ func (bc *brokerCommand) runCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	if bc.brokerMode == "batch" {
-		messageChan := make(chan common.RabbitMQMessage, 10)
+		messageChan := make(chan common.RabbitMQMessage, BulkSize*3)
 		server.MessageChan = messageChan
 
 		go publishToRabbitMQ(messageChan)
 	}
 
-	pb.RegisterMessageBrokerServer(grpcServer, server)
-	err = grpcServer.Serve(lis)
+	go func() {
+		pb.RegisterMessageBrokerServer(grpcServer, server)
+		err = grpcServer.Serve(lis)
+	}()
+
+	select {}
+
 	return err
 }
 
@@ -122,8 +129,6 @@ func newBrokerCommand() *brokerCommand {
 	return bc
 }
 
-const BulkSize = 100
-
 func publishToRabbitMQ(messageChan chan common.RabbitMQMessage) {
 	var received []common.RabbitMQMessage
 	for {
@@ -135,7 +140,7 @@ func publishToRabbitMQ(messageChan chan common.RabbitMQMessage) {
 				//	"component": "broker",
 				//	"event":     "batch-publish",
 				//}).Infof("begin to publish")
-				sendBatchMessages(received)
+				go sendBatchMessages(received)
 				received = nil
 			}
 		case <-time.After(time.Second * 2):
@@ -148,7 +153,7 @@ func publishToRabbitMQ(messageChan chan common.RabbitMQMessage) {
 					"component": "broker",
 					"event":     "batch-publish",
 				}).Infof("begin to publish")
-				sendBatchMessages(received)
+				go sendBatchMessages(received)
 				received = nil
 			}
 		}
@@ -156,6 +161,7 @@ func publishToRabbitMQ(messageChan chan common.RabbitMQMessage) {
 }
 
 func sendBatchMessages(messages []common.RabbitMQMessage) {
+	startTime := time.Now()
 	messageByServer := make(map[string][]common.RabbitMQMessage)
 	for _, message := range messages {
 		target := message.Target
@@ -188,24 +194,23 @@ func sendBatchMessages(messages []common.RabbitMQMessage) {
 		defer channel.Close()
 
 		for _, message := range messagesInServer {
-			err = channel.Publish(
-				message.Target.Exchange,
-				message.Target.RouteKey,
-				false,
-				false,
-				amqp.Publishing{
-					ContentType:  "text/plain",
-					DeliveryMode: amqp.Persistent,
-					Body:         message.Message,
-				})
+			err = sendToRabbitMQ(message, channel)
 			if err != nil {
 				log.WithFields(log.Fields{
 					"component": "broker",
 					"event":     "batch-send",
-				}).Errorf("failed to send message: %v", err)
+				}).Errorf("send to rabbitmq error: %v", err)
 			}
 		}
 	}
+
+	endTime := time.Now()
+	elapsed := endTime.Sub(startTime)
+
+	log.WithFields(log.Fields{
+		"component": "broker",
+		"event":     "batch-send",
+	}).Infof("send messages: %d in %v", len(messages), elapsed)
 
 }
 
@@ -221,7 +226,7 @@ func sendToRabbitMQ(message common.RabbitMQMessage, channel *amqp.Channel) error
 			Body:         message.Message,
 		})
 	if err != nil {
-		return fmt.Errorf("publish message has error: %s", err)
+		return fmt.Errorf("publish to rabbitmq error: %s", err)
 	}
 
 	return nil
