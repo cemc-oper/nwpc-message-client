@@ -36,7 +36,7 @@ func (s *BrokerSender) SendMessage(message []byte) error {
 		currentCount += 1
 		client := pb.NewMessageBrokerClient(conn)
 
-		timeLimit := time.Second * time.Duration(currentCount)
+		timeLimit := time.Second * time.Duration(currentCount*2)
 		ctx, cancel := context.WithTimeout(context.Background(), timeLimit)
 		defer cancel()
 
