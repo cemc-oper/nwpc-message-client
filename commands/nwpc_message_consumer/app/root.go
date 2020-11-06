@@ -25,6 +25,7 @@ func (b *commandsBuilder) addAll() *commandsBuilder {
 		newProductionCommand(),
 		newEcflowClientCommand(),
 		newPredictCommand(),
+		newEcflowClientKafkaCommand(),
 	)
 	return b
 }
