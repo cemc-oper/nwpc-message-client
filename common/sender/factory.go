@@ -8,7 +8,8 @@ func CreateBrokerSender(
 	rabbitMQServer string,
 	exchange string,
 	routeKey string,
-	writeTimeout time.Duration) Sender {
+	writeTimeout time.Duration,
+) Sender {
 	rabbitmqTarget := RabbitMQTarget{
 		Server:       rabbitMQServer,
 		Exchange:     exchange,
@@ -16,13 +17,13 @@ func CreateBrokerSender(
 		WriteTimeout: writeTimeout,
 	}
 
-	brokerSender := BrokerSender{
+	currentSender := BrokerSender{
 		BrokerAddress: brokerAddress,
 		BrokerTryNo:   brokerTryNo,
 		Target:        rabbitmqTarget,
 	}
 
-	return &brokerSender
+	return &currentSender
 }
 
 func CreateRabbitMQSender(
@@ -30,17 +31,36 @@ func CreateRabbitMQSender(
 	exchange string,
 	routeKey string,
 	writeTimeout time.Duration) Sender {
-	rabbitmqTarget := RabbitMQTarget{
+	target := RabbitMQTarget{
 		Server:       server,
 		Exchange:     exchange,
 		RouteKey:     routeKey,
 		WriteTimeout: writeTimeout,
 	}
 
-	rabbitSender := RabbitMQSender{
-		Target: rabbitmqTarget,
+	currentSender := RabbitMQSender{
+		Target: target,
 		Debug:  true,
 	}
 
-	return &rabbitSender
+	return &currentSender
+}
+
+func CreateKafkaSender(
+	brokers []string,
+	topic string,
+	writeTimeout time.Duration,
+) Sender {
+	target := KafkaTarget{
+		Brokers:      brokers,
+		Topic:        topic,
+		WriteTimeout: writeTimeout,
+	}
+
+	currentSender := KafkaSender{
+		Target: target,
+		Debug:  true,
+	}
+
+	return &currentSender
 }

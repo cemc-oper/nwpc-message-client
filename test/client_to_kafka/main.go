@@ -27,21 +27,21 @@ func init() {
 		&brokerServers,
 		"brokers",
 		[]string{},
-		"brokers",
+		"kafka brokers",
 	)
 
 	rootCmd.Flags().IntVar(
 		&workerCount,
 		"worker-count",
 		1,
-		"count of worker to send message",
+		"count of worker to send messages",
 	)
 
 	rootCmd.Flags().StringVar(
 		&logDirectory,
 		"log-dir",
 		"",
-		"log director",
+		"log directory",
 	)
 	rootCmd.MarkFlagRequired("brokers")
 	rootCmd.MarkFlagRequired("log-dir")
@@ -63,7 +63,7 @@ var rootCmd = &cobra.Command{
 				defer logFile.Close()
 				c := time.Tick(1 * time.Second)
 				for _ = range c {
-					SendMessage(
+					sendMessage(
 						index,
 						workerLog,
 					)
@@ -85,7 +85,7 @@ const (
 	writeTimeOut = 2 * time.Second
 )
 
-func SendMessage(index int, workerLog *log.Logger) {
+func sendMessage(index int, workerLog *log.Logger) {
 	data, err := common.CreateEcflowClientMessage("--init=31134")
 	message := common.EventMessage{
 		App:  "nwpc-message-client",
@@ -95,21 +95,10 @@ func SendMessage(index int, workerLog *log.Logger) {
 	}
 
 	messageBytes, _ := json.Marshal(message)
-	//log.WithFields(log.Fields{
-	//	"index": index,
-	//}).Infof("sending message...")
-	target := sender.KafkaTarget{
-		Brokers:      brokerServers,
-		Topic:        topic,
-		WriteTimeout: writeTimeOut,
-	}
 
-	rabbitSender := sender.KafkaSender{
-		Target: target,
-		Debug:  true,
-	}
+	currentSender := sender.CreateKafkaSender(brokerServers, topic, writeTimeOut)
 
-	err = rabbitSender.SendMessage(messageBytes)
+	err = currentSender.SendMessage(messageBytes)
 	if err != nil {
 		workerLog.WithFields(log.Fields{
 			"index": index,
