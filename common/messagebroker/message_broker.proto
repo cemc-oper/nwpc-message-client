@@ -2,10 +2,17 @@ syntax = "proto3";
 
 package messagebroker;
 
+option go_package = "github.com/nwpc-oper/nwpc-message-client/common/messagebroker";
+
 message RabbitMQTarget {
     string server = 1;
     string exchange = 2;
     string route_key = 3;
+}
+
+message KafkaTarget {
+    repeated string brokers = 1;
+    string topic = 2;
 }
 
 message Message {
@@ -17,6 +24,11 @@ message RabbitMQMessage {
     Message message = 2;
 }
 
+message KafkaMessage {
+    KafkaTarget target = 1;
+    Message message = 2;
+}
+
 message Response {
     int32 error_no = 1;
     string error_message = 2;
@@ -24,4 +36,5 @@ message Response {
 
 service MessageBroker{
     rpc SendRabbitMQMessage(RabbitMQMessage) returns (Response) {}
+    rpc SendKafkaMessage(KafkaMessage) returns (Response) {}
 }

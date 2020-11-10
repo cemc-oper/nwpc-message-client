@@ -9,7 +9,7 @@ import (
 )
 
 type MessageBrokerServer struct {
-	pb.UnimplementedMessageBrokerServer
+	pb.MessageBrokerServer
 	DisableDeliver bool
 	BrokerMode     string
 	MessageChan    chan RabbitMQMessage
@@ -67,4 +67,10 @@ func (s *MessageBrokerServer) SendRabbitMQMessage(ctx context.Context, req *pb.R
 
 		return response, nil
 	}
+}
+
+func (s *MessageBrokerServer) SendKafkaMessage(ctx context.Context, req *pb.KafkaMessage) (*pb.Response, error) {
+	response := &pb.Response{}
+	response.ErrorNo = 0
+	return response, nil
 }
