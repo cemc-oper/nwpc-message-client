@@ -85,7 +85,7 @@ func (ec *ecflowClientCommand) runCommand(cmd *cobra.Command, args []string) err
 		Data: data,
 	}
 
-	return sendToTarget(ec.targetParser.option, message)
+	return sendEventMessageToTarget(ec.targetParser.option, message)
 }
 
 func (ec *ecflowClientCommand) generateMainFlags() *pflag.FlagSet {

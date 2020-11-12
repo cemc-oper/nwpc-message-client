@@ -222,7 +222,7 @@ func (pc *productionCommand) sendProductionMessage(data interface{}) error {
 	pc.targetParser.option.routeKeyName = fmt.Sprintf(
 		"%s.production.%s", pc.ProductionInfo.System, pc.ProductionInfo.Type)
 
-	return sendToTarget(pc.targetParser.option, message)
+	return sendEventMessageToTarget(pc.targetParser.option, message)
 }
 
 func (pc *productionCommand) printHelp() {

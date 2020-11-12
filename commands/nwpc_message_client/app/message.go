@@ -75,7 +75,7 @@ func (mc *messageCommand) runCommand(cmd *cobra.Command, args []string) error {
 
 	messageBytes := []byte(mc.mainOptions.messageBody)
 
-	return sendBytesToTarget(mc.targetParser.option, messageBytes)
+	return sendMessageBytesToTarget(mc.targetParser.option, messageBytes)
 }
 
 func (mc *messageCommand) generateMainFlags() *pflag.FlagSet {

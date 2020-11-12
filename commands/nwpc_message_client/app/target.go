@@ -46,32 +46,60 @@ func (t *targetParser) parseCommandTargetOptions(args []string) error {
 }
 
 func (t *targetParser) generateFlags() *pflag.FlagSet {
-	targetFlagSet := pflag.NewFlagSet("targetFlagSet", pflag.ContinueOnError)
+	targetFlagSet := pflag.NewFlagSet("targetOptions", pflag.ContinueOnError)
 	targetFlagSet.SortFlags = false
 	targetFlagSet.ParseErrorsWhitelist.UnknownFlags = true
 
-	targetFlagSet.StringVar(&t.option.rabbitmqServer, "rabbitmq-server", "",
-		"rabbitmq server, such as amqp://guest:guest@host:port")
-	targetFlagSet.StringVar(&t.option.exchangeName, "exchange-name", t.defaultOption.exchangeName,
-		"exchange name for RabbitMQ.")
-	targetFlagSet.StringVar(&t.option.routeKeyName, "route-key-name", t.defaultOption.routeKeyName,
-		"route key name for RabbitMQ.")
+	targetFlagSet.StringVar(
+		&t.option.rabbitmqServer,
+		"rabbitmq-server",
+		"",
+		"rabbitmq server, such as amqp://guest:guest@host:port",
+	)
+	targetFlagSet.StringVar(
+		&t.option.exchangeName,
+		"exchange-name",
+		t.defaultOption.exchangeName,
+		"exchange name for RabbitMQ.",
+	)
+	targetFlagSet.StringVar(
+		&t.option.routeKeyName,
+		"route-key-name",
+		t.defaultOption.routeKeyName,
+		"route key name for RabbitMQ.",
+	)
 
-	targetFlagSet.BoolVar(&t.option.useBroker, "with-broker", false,
-		"deliver message using a broker, should set --broker-address when enabled.")
-	targetFlagSet.StringVar(&t.option.brokerAddress, "broker-address", "",
-		"broker address, work with --with-broker")
-	targetFlagSet.IntVar(&t.option.brokerTries, "broker-tries", t.defaultOption.brokerTries,
-		"try counts when send message to broker, work with --with-broker")
+	targetFlagSet.BoolVar(
+		&t.option.useBroker,
+		"with-broker",
+		false,
+		"deliver message using a broker, should set --broker-address when enabled.",
+	)
+	targetFlagSet.StringVar(
+		&t.option.brokerAddress,
+		"broker-address",
+		"",
+		"broker address, work with --with-broker",
+	)
+	targetFlagSet.IntVar(
+		&t.option.brokerTries,
+		"broker-tries",
+		t.defaultOption.brokerTries,
+		"try counts when send message to broker, work with --with-broker",
+	)
 
-	targetFlagSet.BoolVar(&t.option.disableSend, "disable-send", false,
-		"disable message deliver, just for debug.")
+	targetFlagSet.BoolVar(
+		&t.option.disableSend,
+		"disable-send",
+		false,
+		"disable message deliver, just for debug.",
+	)
 
 	targetFlagSet.SetAnnotation("rabbitmq-server", commands.RequiredOption, []string{"true"})
 	return targetFlagSet
 }
 
-func sendToTarget(options targetOptions, message common.EventMessage) error {
+func sendEventMessageToTarget(options targetOptions, message common.EventMessage) error {
 	messageBytes, _ := json.Marshal(message)
 	messageBytesIndent, _ := json.MarshalIndent(message, "", "  ")
 	if options.disableSend {
@@ -83,42 +111,10 @@ func sendToTarget(options targetOptions, message common.EventMessage) error {
 		return nil
 	}
 
-	senderType := RabbitMQSenderType
-	if options.useBroker {
-		senderType = BrokerSenderType
-	}
-
-	var currentSender sender.Sender
-	switch senderType {
-	case RabbitMQSenderType:
-		currentSender = sender.CreateRabbitMQSender(
-			options.rabbitmqServer,
-			options.exchangeName,
-			options.routeKeyName,
-			options.writeTimeout)
-		break
-	case BrokerSenderType:
-		currentSender = sender.CreateBrokerSender(
-			options.brokerAddress,
-			options.brokerTries,
-			options.rabbitmqServer,
-			options.exchangeName,
-			options.routeKeyName,
-			options.writeTimeout)
-		break
-	default:
-		return fmt.Errorf("SenderType is not supported: %d", senderType)
-	}
-	log.WithFields(log.Fields{
-		"component": "message",
-		"event":     "print",
-	}).Infof("%s", messageBytes)
-	fmt.Printf("%s\n", messageBytesIndent)
-
-	return sendMessage(currentSender, messageBytes)
+	return sendMessageToTarget(options, messageBytes)
 }
 
-func sendBytesToTarget(options targetOptions, messageBytes []byte) error {
+func sendMessageBytesToTarget(options targetOptions, messageBytes []byte) error {
 	if options.disableSend {
 		log.WithFields(log.Fields{
 			"component": "nwpc_message_client",
@@ -128,6 +124,10 @@ func sendBytesToTarget(options targetOptions, messageBytes []byte) error {
 		return nil
 	}
 
+	return sendMessageToTarget(options, messageBytes)
+}
+
+func sendMessageToTarget(options targetOptions, messageBytes []byte) error {
 	senderType := RabbitMQSenderType
 	if options.useBroker {
 		senderType = BrokerSenderType
@@ -137,7 +137,10 @@ func sendBytesToTarget(options targetOptions, messageBytes []byte) error {
 	switch senderType {
 	case RabbitMQSenderType:
 		currentSender = sender.CreateRabbitMQSender(
-			options.rabbitmqServer, options.exchangeName, options.routeKeyName, options.writeTimeout)
+			options.rabbitmqServer,
+			options.exchangeName,
+			options.routeKeyName,
+			options.writeTimeout)
 		break
 	case BrokerSenderType:
 		currentSender = sender.CreateBrokerSender(
