@@ -20,7 +20,10 @@ type RabbitMQMessage struct {
 	Message []byte
 }
 
-func (s *MessageBrokerServer) SendRabbitMQMessage(ctx context.Context, req *pb.RabbitMQMessage) (*pb.Response, error) {
+func (s *MessageBrokerServer) SendRabbitMQMessage(
+	ctx context.Context,
+	req *pb.RabbitMQMessage,
+) (*pb.Response, error) {
 	//log.WithFields(log.Fields{
 	//	"component": "broker",
 	//	"event":     "message",
@@ -42,17 +45,11 @@ func (s *MessageBrokerServer) SendRabbitMQMessage(ctx context.Context, req *pb.R
 		response.ErrorNo = 0
 		return response, nil
 	} else {
-		rabbitmqTarget := sender.RabbitMQTarget{
-			Server:       req.GetTarget().GetServer(),
-			Exchange:     req.GetTarget().GetExchange(),
-			RouteKey:     req.GetTarget().GetRouteKey(),
-			WriteTimeout: 2 * time.Second,
-		}
+		server := req.GetTarget().GetServer()
+		exchange := req.GetTarget().GetExchange()
+		routeKey := req.GetTarget().GetRouteKey()
 
-		rabbitSender := sender.RabbitMQSender{
-			Target: rabbitmqTarget,
-			Debug:  true,
-		}
+		rabbitSender := sender.CreateRabbitMQSender(server, exchange, routeKey, 2*time.Second)
 
 		response := &pb.Response{}
 		response.ErrorNo = 0
@@ -69,7 +66,10 @@ func (s *MessageBrokerServer) SendRabbitMQMessage(ctx context.Context, req *pb.R
 	}
 }
 
-func (s *MessageBrokerServer) SendKafkaMessage(ctx context.Context, req *pb.KafkaMessage) (*pb.Response, error) {
+func (s *MessageBrokerServer) SendKafkaMessage(
+	ctx context.Context,
+	req *pb.KafkaMessage,
+) (*pb.Response, error) {
 	response := &pb.Response{}
 	response.ErrorNo = 0
 	return response, nil
