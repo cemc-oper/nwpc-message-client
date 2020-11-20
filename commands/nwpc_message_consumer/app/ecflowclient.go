@@ -131,7 +131,7 @@ func newEcflowClientCommand() *ecflowClientCommand {
 	ecflowClientCmd.Flags().IntVar(
 		&ec.bulkSize,
 		"bulk-size",
-		20,
+		40,
 		"bulk size",
 	)
 
