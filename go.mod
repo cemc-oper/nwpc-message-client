@@ -1,6 +1,6 @@
 module github.com/nwpc-oper/nwpc-message-client
 
-go 1.15
+go 1.16
 
 require (
 	github.com/frankban/quicktest v1.11.2 // indirect
