@@ -3,6 +3,7 @@ module github.com/nwpc-oper/nwpc-message-client
 go 1.16
 
 require (
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/frankban/quicktest v1.11.2 // indirect
 	github.com/golang/protobuf v1.4.3
 	github.com/golang/snappy v0.0.2 // indirect

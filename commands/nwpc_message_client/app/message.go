@@ -10,7 +10,7 @@ import (
 )
 
 const messageDescription = `
-Send messages from json file. 
+Send messages from json file string. 
 Messages are send to a rabbitmq server directly or via a broker running by nwpc_message_client broker command.
 `
 

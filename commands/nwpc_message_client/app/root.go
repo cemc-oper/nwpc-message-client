@@ -36,6 +36,7 @@ func (b *commandsBuilder) addAll() *commandsBuilder {
 		newEcflowClientCommand(),
 		newMessageCommand(),
 		newBrokerCommand(),
+		newLogCommand(),
 	)
 	return b
 }
