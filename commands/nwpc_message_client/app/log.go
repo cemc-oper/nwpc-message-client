@@ -113,8 +113,8 @@ func (lc *logCommand) parseMainOptions(args []string) error {
 	return nil
 }
 
+// generate command parser for main options.
 func (lc *logCommand) generateMainCommandParser() *pflag.FlagSet {
-
 	flagSet := pflag.NewFlagSet("main", pflag.ContinueOnError)
 	flagSet.ParseErrorsWhitelist.UnknownFlags = true
 	flagSet.SortFlags = false
@@ -134,6 +134,7 @@ func (lc *logCommand) generateMainCommandParser() *pflag.FlagSet {
 	return flagSet
 }
 
+// parse content options. Support arbitrary options.
 func (lc *logCommand) parseContentOptions(args []string) error {
 	// check content args
 	flagSet := pflag.NewFlagSet("content", pflag.ContinueOnError)
@@ -170,6 +171,8 @@ func (lc *logCommand) parseContentOptions(args []string) error {
 	return nil
 }
 
+// create ``LogMessageData`` using options in ``logCommand``.
+// Convert all strings into necessary data field.
 func (lc *logCommand) createLogData() (interface{}, error) {
 	startTime, err := time.Parse("2006010215", lc.mainOptions.startTime)
 	if err != nil {
@@ -198,6 +201,8 @@ func (lc *logCommand) createLogData() (interface{}, error) {
 	return data, nil
 }
 
+// Send message to target.
+// Create Event Message with message data.
 func (lc *logCommand) sendMessage(data interface{}) error {
 	message := common.EventMessage{
 		App:  appName,
@@ -212,6 +217,7 @@ func (lc *logCommand) sendMessage(data interface{}) error {
 	return sendEventMessageToTarget(lc.targetParser.option, message)
 }
 
+// print command options usage.
 func (lc *logCommand) printHelp() {
 	helpOutput := os.Stdout
 	fmt.Fprintf(helpOutput, "%s\n", logDescription)
@@ -220,4 +226,12 @@ func (lc *logCommand) printHelp() {
 	mainFlags.SetOutput(helpOutput)
 	fmt.Fprintf(helpOutput, "Main Flags:\n")
 	mainFlags.PrintDefaults()
+
+	fmt.Fprintf(helpOutput, `
+Content Options:
+	Put content fields after --. Support any option. For example:
+
+	1. Background data
+		-- --forecast-time=0h --source=ncep --start_hour_offset=-6
+`)
 }
